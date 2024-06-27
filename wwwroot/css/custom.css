@@ -10,13 +10,39 @@
 
 .card {
     transition: box-shadow 0.3s ease-in-out;
-    overflow: hidden; 
+    overflow: hidden;
 }
 
-.hover-shadow:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    .card:hover {
+        background-color: rgba(0, 0, 0, 0.05); /* Oscurecer ligeramente el fondo */
+        transform: translateY(5px); /* Mover la tarjeta hacia abajo */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Añadir una sombra más pronunciada */
+    }
+
+.btn-circle {
+    border-radius: 50%; /* Hacer el botón circular */
+    padding: 5px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.7); /* Fondo blanco con opacidad */
 }
 
-.linkSubrayado{
-    text-decoration: none;
+.dropdown-menu {
+    display: none; /* Ocultar el menú desplegable por defecto */
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #fff; /* Color de fondo del menú desplegable */
+    border: 1px solid rgba(0, 0, 0, 0.1); /* Borde del menú desplegable */
+    padding: 0.5rem 0;
+    min-width: 10rem; /* Ancho mínimo del menú desplegable */
+    z-index: 1000; /* Asegurar que esté por encima de otros elementos */
+}
+
+    .dropdown-menu a:hover {
+        background-color: rgba(0, 0, 0, 0.1); /* Cambia el color de fondo de las opciones al pasar el cursor */
+    }
+
+#dropdownMenuLink:hover svg {
+    background-color: rgba(0, 0, 0, 0.2); /* Cambia el color de fondo al pasar el cursor */
 }
