@@ -1,4 +1,7 @@
-﻿.card-img-top-container {
+﻿/* sidebar.css */
+
+/* Reglas existentes */
+.card-img-top-container {
     width: 100%;
     overflow: hidden;
 }
@@ -13,11 +16,11 @@
     overflow: hidden;
 }
 
-    .card:hover {
-        background-color: rgba(0, 0, 0, 0.05); /* Oscurecer ligeramente el fondo */
-        transform: translateY(5px); /* Mover la tarjeta hacia abajo */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Añadir una sombra más pronunciada */
-    }
+.card:hover {
+    background-color: rgba(0, 0, 0, 0.05); /* Oscurecer ligeramente el fondo */
+    transform: translateY(5px); /* Mover la tarjeta hacia abajo */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Añadir una sombra más pronunciada */
+}
 
 .btn-circle {
     border-radius: 50%; /* Hacer el botón circular */
@@ -45,4 +48,45 @@
 
 #dropdownMenuLink:hover svg {
     background-color: rgba(0, 0, 0, 0.2); /* Cambia el color de fondo al pasar el cursor */
+}
+
+/* Estilos del sidebar */
+#wrapper {
+    display: flex;
+    align-items: stretch;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    width: 250px;
+    margin-left: -250px;
+    transition: margin 0.25s ease-out;
+    background-color: #9032bb;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: 0;
+}
+
+#page-content-wrapper {
+    width: 100%;
+    padding: 20px;
+}
+
+.sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+}
+
+.list-group-item {
+    padding: 20px;
+}
+
+.bg-primary {
+    background-color: #4e73df !important;
+}
+
+.list-group-item-action:hover {
+    background-color: #374a96 !important;
+    color: #fff !important;
 }
