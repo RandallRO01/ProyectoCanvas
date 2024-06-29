@@ -1,6 +1,4 @@
-﻿/* sidebar.css */
-
-/* Reglas existentes */
+﻿/* Dashboard */
 .card-img-top-container {
     width: 100%;
     overflow: hidden;
@@ -16,6 +14,11 @@
     overflow: hidden;
 }
 
+.card-link {
+    text-decoration: none;
+    margin-right: 15px;
+}
+
 .card:hover {
     background-color: rgba(0, 0, 0, 0.05); /* Oscurecer ligeramente el fondo */
     transform: translateY(5px); /* Mover la tarjeta hacia abajo */
@@ -27,7 +30,6 @@
     padding: 5px;
     width: 40px;
     height: 40px;
-    background-color: rgba(255, 255, 255, 0.7); /* Fondo blanco con opacidad */
 }
 
 .dropdown-menu {
@@ -42,21 +44,24 @@
     z-index: 1000; /* Asegurar que esté por encima de otros elementos */
 }
 
-    .dropdown-menu a:hover {
-        background-color: rgba(0, 0, 0, 0.1); /* Cambia el color de fondo de las opciones al pasar el cursor */
-    }
+.dropdown-menu a:hover {
+    background-color: rgba(0, 0, 0, 0.1); /* Cambia el color de fondo de las opciones al pasar el cursor */
+}
 
 #dropdownMenuLink:hover svg {
     background-color: rgba(0, 0, 0, 0.2); /* Cambia el color de fondo al pasar el cursor */
 }
 
 /* Estilos del sidebar */
-#wrapper {
+.wrapper {
     display: flex;
     align-items: stretch;
 }
 
-#sidebar-wrapper {
+.sidebar-wrapper {
+    position: fixed; /* Hace que el sidebar sea fijo */
+    top: 0;
+    left: 0;
     min-height: 100vh;
     width: 250px;
     margin-left: -250px;
@@ -64,12 +69,10 @@
     background-color: #9032bb;
 }
 
-#wrapper.toggled #sidebar-wrapper {
-    margin-left: 0;
-}
 
-#page-content-wrapper {
-    width: 100%;
+.page-content-wrapper {
+    margin-left: 250px; /* Ajusta el margen izquierdo para que no quede debajo del sidebar */
+    width: calc(100% - 250px); /* Ajusta el ancho para que no ocupe el espacio del sidebar */
     padding: 20px;
 }
 
@@ -82,11 +85,113 @@
     padding: 20px;
 }
 
-.bg-primary {
-    background-color: #4e73df !important;
-}
-
 .list-group-item-action:hover {
-    background-color: #374a96 !important;
+    background-color: #4f106c !important;
     color: #fff !important;
 }
+
+/*Creacion de curso*/
+.form-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 500px;
+    margin: auto;
+}
+
+.form-container h2 {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.form-container label {
+    display: block;
+    margin-top: 10px;
+}
+
+.form-container input[type="text"],
+.form-container textarea,
+.form-container select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.form-container .back-button {
+    background-color: #0cb7f2;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.error-message {
+    color: red;
+}
+
+/*Boton crear curso*/
+body {
+    font-family: Arial, sans-serif;
+}
+
+.dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+   
+}
+
+.course-card, .create-course-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 200px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    text-align: center;
+    cursor: pointer;
+}
+
+.create-course-card {
+    border: none;
+}
+
+.create-course-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    background-color: #0cb7f2;
+    border-radius: 50%;
+}
+
+    .create-course-button span {
+        color: white;
+        font-size: 48px;
+    }
+
+.create-course-text {
+    color: #0cb7f2;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+a.create-course-card:link,
+a.create-course-card:visited,
+a.create-course-card:hover,
+a.create-course-card:active {
+    text-decoration: none;
+    color: inherit;
+}
+
