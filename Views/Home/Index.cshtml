@@ -54,17 +54,79 @@
             </div>
         }
         <div class="col-md-4 mb-4">
-            <a href="#" class="create-course-card">
-                <div class="card h-100 shadow-sm d-flex align-items-center justify-content-center" style="width: 18rem;">
-                    <div class="create-course-button">
-                        <span style="font-size: 2rem;">+</span>
-                    </div>
-                    <div class="create-course-text">Crear Curso</div>
+            <button class="btn create-course-card" style="margin-left: 40px; margin-top: 40px;" type="button" data-bs-toggle="modal" data-bs-target="#createCourseModal">
+                <div class="create-course-button">
+                    <span style="font-size: 2rem;">+</span>
                 </div>
-            </a>
+                <div class="create-course-text">Crear Curso</div>
+            </button>
         </div>
     </div>
 </div> 
+
+
+<!-- Modal -->
+<div class="modal fade" id="createCourseModal" tabindex="-1" role="dialog" aria-labelledby="createCourseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCourseModalLabel">Crear Curso</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="create-course-form" action="dashboard-html" method="post" onsubmit="return validateForm()">
+                    <div class="form-group">
+                        <label for="course_name">Nombre del curso:</label>
+                        <input type="text" class="form-control" id="course_name" name="course_name" maxlength="50" required>
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label for="course_description">Descripción del curso:</label>
+                        <textarea class="form-control" id="course_description" name="course_description" required></textarea>
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label for="course_image">Imagen del curso:</label>
+                        <input type="file" class="form-control" id="course_image" name="course_image" accept="image/*" required>
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label for="course_year">Año:</label>
+                        <select class="form-control" id="course_year" name="course_year" required>
+                            <option value="2020">2020</option>
+                            <option value="2021">2021</option>
+                            <option value="2022">2022</option>
+                            <option value="2023">2023</option>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                        </select>
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label for="course_term">Cuatrimestre:</label>
+                        <select class="form-control" id="course_term" name="course_term" required>
+                            <option value="ICO2024">ICO2024</option>
+                            <option value="IICO2024">IICO2024</option>
+                            <option value="IIICO2024">IIICO2024</option>
+                        </select>
+                    </div>
+                    <br />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                        <input type="submit" class="btn btn-primary" value="Guardar Curso">
+                    </div>
+
+                    <div id="error-message" class="error-message" style="display: none;">
+                        Uno o varios datos no son válidos
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

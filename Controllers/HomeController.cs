@@ -20,10 +20,10 @@ namespace ProyectoCanvas.Controllers
         {
             var cursos = new List<Cursos>
             {
-                new Cursos { NombreCurso = "Course 1", Descripcion = "Description 1", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain", Link = "/course1" },
-                new Cursos { NombreCurso = "Course 2", Descripcion = "Description 2", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain", Link = "/course2" },
-                new Cursos { NombreCurso = "Course 3", Descripcion = "Description 3", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain", Link = "/course3" },
-                new Cursos { NombreCurso = "Course 4", Descripcion = "Description 4", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain", Link = "/course4" }
+                new Cursos { NombreCurso = "Course 1", Descripcion = "Description 1", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" },
+                new Cursos { NombreCurso = "Course 2", Descripcion = "Description 2", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" },
+                new Cursos { NombreCurso = "Course 3", Descripcion = "Description 3", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" },
+                new Cursos { NombreCurso = "Course 4", Descripcion = "Description 4", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" }
             };
 
             return View(cursos);

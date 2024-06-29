@@ -20,61 +20,59 @@
 }
 
 .card:hover {
-    background-color: rgba(0, 0, 0, 0.05); /* Oscurecer ligeramente el fondo */
-    transform: translateY(5px); /* Mover la tarjeta hacia abajo */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Añadir una sombra más pronunciada */
+    background-color: rgba(0, 0, 0, 0.05); 
+    transform: translateY(5px); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .btn-circle {
-    border-radius: 50%; /* Hacer el botón circular */
+    border-radius: 50%;
     padding: 5px;
     width: 40px;
     height: 40px;
 }
 
 .dropdown-menu {
-    display: none; /* Ocultar el menú desplegable por defecto */
+    display: none; 
     position: absolute;
     right: 0;
     top: 100%;
-    background-color: #fff; /* Color de fondo del menú desplegable */
-    border: 1px solid rgba(0, 0, 0, 0.1); /* Borde del menú desplegable */
+    background-color: #fff; 
+    border: 1px solid rgba(0, 0, 0, 0.1);
     padding: 0.5rem 0;
-    min-width: 10rem; /* Ancho mínimo del menú desplegable */
-    z-index: 1000; /* Asegurar que esté por encima de otros elementos */
+    min-width: 10rem; 
+    z-index: 1000; 
 }
 
 .dropdown-menu a:hover {
-    background-color: rgba(0, 0, 0, 0.1); /* Cambia el color de fondo de las opciones al pasar el cursor */
+    background-color: rgba(0, 0, 0, 0.1); 
 }
 
 #dropdownMenuLink:hover svg {
-    background-color: rgba(0, 0, 0, 0.2); /* Cambia el color de fondo al pasar el cursor */
+    background-color: rgba(0, 0, 0, 0.2); 
 }
 
 /* Estilos del sidebar */
-.wrapper {
-    display: flex;
-    align-items: stretch;
-}
-
-.sidebar-wrapper {
-    position: fixed; /* Hace que el sidebar sea fijo */
+#sidebar-wrapper {
+    position: fixed;
     top: 0;
     left: 0;
-    min-height: 100vh;
-    width: 250px;
-    margin-left: -250px;
-    transition: margin 0.25s ease-out;
+    height: 100vh;
+    width: 108px;
     background-color: #9032bb;
+    overflow-y: auto;
 }
 
+#wrapper {
+    display: flex;
+    padding-left: 100px; 
+}
 
-.page-content-wrapper {
-    margin-left: 250px; /* Ajusta el margen izquierdo para que no quede debajo del sidebar */
-    width: calc(100% - 250px); /* Ajusta el ancho para que no ocupe el espacio del sidebar */
+#page-content-wrapper {
+    flex-grow: 1;
     padding: 20px;
 }
+
 
 .sidebar-heading {
     padding: 0.875rem 1.25rem;
