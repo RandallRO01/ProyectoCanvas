@@ -1,6 +1,12 @@
-﻿
-@{
-	Layout = "_LoginLayout";
+﻿@{
+    Layout = "_LoginLayout";
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @ViewBag.Error
+    </div>
 }
 
 <div class="header-text">
@@ -28,3 +34,5 @@
         </a>
     </div>
 </div>
+
+

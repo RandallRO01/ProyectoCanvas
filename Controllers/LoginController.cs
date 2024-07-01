@@ -8,13 +8,13 @@ namespace ProyectoCanvas.Controllers
 {
     public class LoginController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly ApplicationDbContext context;
+        private readonly ILogger<LoginController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public LoginController(ILogger<HomeController> logger, ApplicationDbContext context)
+        public LoginController(ILogger<LoginController> logger, ApplicationDbContext context)
         {
             _logger = logger;
-            this.context = context;
+            _context = context;
         }
 
         public IActionResult Index()
@@ -25,20 +25,38 @@ namespace ProyectoCanvas.Controllers
         [HttpPost]
         public IActionResult Login(string correo, string password, string role)
         {
-            // Simple validation example
+            // Validación simple de ejemplo
             if (correo == "admin@ulacit.ed.cr" && password == "admin")
             {
-                // Authenticate user
+                // Autenticar usuario
                 HttpContext.Session.SetString("Correo", correo);
                 HttpContext.Session.SetString("Role", role);
 
                 _logger.LogInformation("User authenticated: {Correo}, Role: {Role}", correo, role);
 
+                // Establecer la cookie de autenticación
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, correo),
+                    new Claim(ClaimTypes.Role, role)
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
+                };
+
+                HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+
                 return RedirectToAction("Index", "Home");
             }
+
             _logger.LogWarning("Invalid login attempt for user: {Correo}, Password: {Password}", correo, password);
 
-            // Show error message
+            // Mostrar mensaje de error
             ViewBag.Error = "Usuario o contraseña incorrectos.";
             return View("Index");
         }
@@ -46,8 +64,8 @@ namespace ProyectoCanvas.Controllers
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
+            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index");
         }
     }
 }
-
