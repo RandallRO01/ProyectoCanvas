@@ -1,0 +1,30 @@
+﻿
+@{
+	Layout = "_LoginLayout";
+}
+
+<div class="header-text">
+    <h2>Bienvenido a</h2>
+    <h1 class="font-weight-bold">CANVAS</h1>
+    <p class="lead">facilitando la enseñanza y aprendizaje</p>
+</div>
+
+<div class="login-buttons">
+    <!-- Botón para Estudiantes  -->
+    <div class="btn-wrapper">
+        <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#loginModal" onclick="setRole('Estudiante')">
+            <img src="~/css/Imagenes/estudiante.jpg" alt="Estudiantes" class="img-fluid">
+            <br />
+            <div class="btn-custom mt-2">Estudiante</div>
+        </a>
+    </div>
+
+    <!-- Botón para Profesores -->
+    <div class="btn-wrapper">
+        <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#loginModal" onclick="setRole('Profesor')">
+            <img src="~/css/Imagenes/profesor.jpg" alt="Profesor" class="img-fluid">
+            <br />
+            <div class="btn-custom mt-2">Profesor</div>
+        </a>
+    </div>
+</div>

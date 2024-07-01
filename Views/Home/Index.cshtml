@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<ProyectoCanvas.Models.Cursos>
 
 @{
-    ViewData["Title"] = "DashBoard";
+    Layout = "_Layout";
 }
 
 
@@ -53,14 +53,17 @@
                 </div>
             </div>
         }
-        <div class="col-md-4 mb-4">
-            <button class="btn create-course-card" style="margin-left: 40px; margin-top: 40px;" type="button" data-bs-toggle="modal" data-bs-target="#createCourseModal">
-                <div class="create-course-button">
-                    <span style="font-size: 2rem;">+</span>
-                </div>
-                <div class="create-course-text">Crear Curso</div>
-            </button>
-        </div>
+        @if (ViewBag.Role == "Profesor")
+        {
+            <div class="col-md-4 mb-4">
+                <button class="btn create-course-card" style="margin-left: 40px; margin-top: 40px;" type="button" data-bs-toggle="modal" data-bs-target="#createCourseModal">
+                    <div class="create-course-button">
+                        <span style="font-size: 2rem;">+</span>
+                    </div>
+                    <div class="create-course-text">Crear Curso</div>
+                </button>
+            </div>
+        }
     </div>
 </div> 
 

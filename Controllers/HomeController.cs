@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoCanvas.Data;
 using ProyectoCanvas.Models;
@@ -16,8 +17,16 @@ namespace ProyectoCanvas.Controllers
             this.context = context;
         }
 
+        [Authorize]
         public IActionResult Index()
         {
+            if (HttpContext.Session.GetString("Correo") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            ViewBag.Role = HttpContext.Session.GetString("Role");
+
             var cursos = new List<Cursos>
             {
                 new Cursos { NombreCurso = "Course 1", Descripcion = "Description 1", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" },
@@ -29,10 +38,6 @@ namespace ProyectoCanvas.Controllers
             return View(cursos);
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
