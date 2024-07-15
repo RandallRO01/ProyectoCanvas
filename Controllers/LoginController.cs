@@ -1,20 +1,17 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc;
-using ProyectoCanvas.Data;
-using System.Security.Claims;
+﻿using Microsoft.AspNetCore.Mvc;
+using ProyectoCanvas.Services;
 
 namespace ProyectoCanvas.Controllers
 {
     public class LoginController : Controller
     {
         private readonly ILogger<LoginController> _logger;
-        private readonly ApplicationDbContext _context;
+        private readonly IRepositorioUsuarios _repositorioUsuarios;
 
-        public LoginController(ILogger<LoginController> logger, ApplicationDbContext context)
+        public LoginController(ILogger<LoginController> logger, IRepositorioUsuarios repositorioUsuarios)
         {
             _logger = logger;
-            _context = context;
+            _repositorioUsuarios = repositorioUsuarios;
         }
 
         public IActionResult Index()
@@ -23,49 +20,28 @@ namespace ProyectoCanvas.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(string correo, string password, string role)
+        public async Task<IActionResult> Login(string correo, string password, string role)
         {
-            // Validación simple de ejemplo
-            if (correo == "admin@ulacit.ed.cr" && password == "admin")
+            var usuario = await _repositorioUsuarios.ObtenerPorCorreo(correo);
+
+            if (usuario != null && VerifyPasswordHash(password, usuario.PasswordHash))
             {
-                // Autenticar usuario
-                HttpContext.Session.SetString("Correo", correo);
-                HttpContext.Session.SetString("Role", role);
-
-                _logger.LogInformation("User authenticated: {Correo}, Role: {Role}", correo, role);
-
-                // Establecer la cookie de autenticación
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, correo),
-                    new Claim(ClaimTypes.Role, role)
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = true,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
-                };
-
-                HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-
-                return RedirectToAction("Index", "Home");
+                // Iniciar sesión del usuario
+                // Código para manejar la autenticación
+                return RedirectToAction("Dashboard", "Home");
             }
 
-            _logger.LogWarning("Invalid login attempt for user: {Correo}, Password: {Password}", correo, password);
-
-            // Mostrar mensaje de error
-            ViewBag.Error = "Usuario o contraseña incorrectos.";
-            return View("Index");
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            return View();
         }
 
-        public IActionResult Logout()
+        private bool VerifyPasswordHash(string password, byte[] storedHash)
         {
-            HttpContext.Session.Clear();
-            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index");
+            using (var hmac = new System.Security.Cryptography.HMACSHA512())
+            {
+                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                return computedHash.SequenceEqual(storedHash);
+            }
         }
     }
 }
