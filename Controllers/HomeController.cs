@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ProyectoCanvas.Data;
 using ProyectoCanvas.Models;
 using System.Diagnostics;
 
@@ -9,12 +8,12 @@ namespace ProyectoCanvas.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ApplicationDbContext context;
+        
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
+        public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            this.context = context;
+            
         }
 
         [Authorize]
