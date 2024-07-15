@@ -1,30 +1,29 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoCanvas.Models;
+using ProyectoCanvas.Services;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace ProyectoCanvas.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        
+        private readonly IRepositorioRoles _repositorioRoles;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IRepositorioRoles repositorioRoles)
         {
             _logger = logger;
-            
+            _repositorioRoles = repositorioRoles;
         }
 
         [Authorize]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            if (HttpContext.Session.GetString("Correo") == null)
-            {
-                return RedirectToAction("Index", "Login");
-            }
-
-            ViewBag.Role = HttpContext.Session.GetString("Role");
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            bool esProfesor = await _repositorioRoles.EsUsuarioEnRol(usuarioId, "Profesor");
+            ViewBag.EsProfesor = esProfesor;
 
             var cursos = new List<Cursos>
             {

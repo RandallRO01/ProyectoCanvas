@@ -2,6 +2,7 @@
 
 @{
     Layout = "_Layout";
+    bool esProfesor = ViewBag.EsProfesor;
 }
 
 
@@ -53,7 +54,7 @@
                 </div>
             </div>
         }
-        @if (ViewBag.Role == "Profesor")
+        @if (esProfesor)
         {
             <div class="col-md-4 mb-4">
                 <button class="btn create-course-card" style="margin-left: 40px; margin-top: 40px;" type="button" data-bs-toggle="modal" data-bs-target="#createCourseModal">

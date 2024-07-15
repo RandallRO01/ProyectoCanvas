@@ -1,5 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 using ProyectoCanvas.Services;
+using System.Security.Claims;
+using ProyectoCanvas.Services.Utilities;
+using Microsoft.Data.SqlClient;
+using Dapper;
+using System.Text;
 
 namespace ProyectoCanvas.Controllers
 {
@@ -24,24 +31,42 @@ namespace ProyectoCanvas.Controllers
         {
             var usuario = await _repositorioUsuarios.ObtenerPorCorreo(correo);
 
-            if (usuario != null && VerifyPasswordHash(password, usuario.PasswordHash))
+            if (usuario == null)
             {
-                // Iniciar sesión del usuario
-                // Código para manejar la autenticación
-                return RedirectToAction("Dashboard", "Home");
+                ViewBag.Error = "Usuario no encontrado.";
+                return View("Index");
             }
 
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-            return View();
+            if (!VerifyPlainPassword(password, usuario.PasswordHash))
+            {
+                ViewBag.Error = "Contraseña incorrecta.";
+                // Para propósitos de depuración, imprime las contraseñas.
+                Console.WriteLine("Contraseña ingresada: " + password);
+                Console.WriteLine("Contraseña almacenada: " + Encoding.UTF8.GetString(usuario.PasswordHash));
+                return View("Index");
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim(ClaimTypes.Name, usuario.Correo),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties();
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+
+            return RedirectToAction("Index", "Home");
         }
 
-        private bool VerifyPasswordHash(string password, byte[] storedHash)
+        private bool VerifyPlainPassword(string password, byte[] storedPassword)
         {
-            using (var hmac = new System.Security.Cryptography.HMACSHA512())
-            {
-                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(storedHash);
-            }
+            // Convertir storedPassword de VARBINARY a string para comparar en texto plano
+            var storedPasswordString = System.Text.Encoding.UTF8.GetString(storedPassword);
+
+            return password == storedPasswordString;
         }
     }
 }
