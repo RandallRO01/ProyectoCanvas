@@ -33,17 +33,12 @@ namespace ProyectoCanvas.Controllers
 
             if (usuario == null)
             {
-                ViewBag.Error = "Usuario no encontrado.";
-                return View("Index");
+                return Json(new { success = false, message = "Usuario no encontrado.", field = "correo" });
             }
 
             if (!VerifyPlainPassword(password, usuario.PasswordHash))
             {
-                ViewBag.Error = "Contraseña incorrecta.";
-                // Para propósitos de depuración, imprime las contraseñas.
-                Console.WriteLine("Contraseña ingresada: " + password);
-                Console.WriteLine("Contraseña almacenada: " + Encoding.UTF8.GetString(usuario.PasswordHash));
-                return View("Index");
+                return Json(new { success = false, message = "Contraseña incorrecta.", field = "password" });
             }
 
             var claims = new List<Claim>
@@ -58,7 +53,7 @@ namespace ProyectoCanvas.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
-            return RedirectToAction("Index", "Home");
+            return Json(new { success = true, redirectUrl = Url.Action("Index", "Home") });
         }
 
         private bool VerifyPlainPassword(string password, byte[] storedPassword)

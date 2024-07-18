@@ -11,11 +11,14 @@ namespace ProyectoCanvas.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IRepositorioRoles _repositorioRoles;
+        private readonly IRepositorioCursos _repositorioCursos;
 
-        public HomeController(ILogger<HomeController> logger, IRepositorioRoles repositorioRoles)
+        public HomeController(ILogger<HomeController> logger, IRepositorioRoles repositorioRoles,
+            IRepositorioCursos repositorioCursos)
         {
             _logger = logger;
             _repositorioRoles = repositorioRoles;
+            _repositorioCursos = repositorioCursos;
         }
 
         [Authorize]
@@ -25,17 +28,66 @@ namespace ProyectoCanvas.Controllers
             bool esProfesor = await _repositorioRoles.EsUsuarioEnRol(usuarioId, "Profesor");
             ViewBag.EsProfesor = esProfesor;
 
-            var cursos = new List<Cursos>
-            {
-                new Cursos { NombreCurso = "Course 1", Descripcion = "Description 1", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" },
-                new Cursos { NombreCurso = "Course 2", Descripcion = "Description 2", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" },
-                new Cursos { NombreCurso = "Course 3", Descripcion = "Description 3", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" },
-                new Cursos { NombreCurso = "Course 4", Descripcion = "Description 4", ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain" }
-            };
+            var cursos = await _repositorioCursos.ObtenerCursos();
 
             return View(cursos);
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Profesor")]
+        public async Task<IActionResult> CreateOrEditCourse(Cursos curso)
+        {
+            if (ModelState.IsValid)
+            {
+                if (string.IsNullOrEmpty(curso.ImagenUrl))
+                {
+                    curso.ImagenUrl = "https://th.bing.com/th/id/OIP.ijWNEiPVAtBLrzw6F-yZxgAAAA?rs=1&pid=ImgDetMain";
+                }
+
+                if (curso.Id == 0)
+                {
+                    await _repositorioCursos.Crear(curso);
+                }
+                else
+                {
+                    await _repositorioCursos.Actualizar(curso);
+                }
+                return RedirectToAction("Index");
+            }
+
+            return View("Index");
+        }
+
+        [Authorize(Roles = "Profesor")]
+        public async Task<IActionResult> EditCourse(int id)
+        {
+            var curso = await _repositorioCursos.ObtenerCursoPorId(id);
+            if (curso == null)
+            {
+                return NotFound();
+            }
+            return Json(curso); // Devuelve el curso como JSON
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Profesor")]
+        public async Task<IActionResult> EditCourse(Cursos curso)
+        {
+            if (ModelState.IsValid)
+            {
+                await _repositorioCursos.Actualizar(curso);
+                return RedirectToAction("Index");
+            }
+            return View(curso);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Profesor")]
+        public async Task<IActionResult> DeleteCourse(int id)
+        {
+            await _repositorioCursos.Eliminar(id);
+            return RedirectToAction("Index");
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

@@ -22,9 +22,10 @@
                             </svg>
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink-@curso.Id">
-                            <li><a class="dropdown-item" href="#">Opción 1</a></li>
-                            <li><a class="dropdown-item" href="#">Opción 2</a></li>
-                            <li><a class="dropdown-item" href="#">Opción 3</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openEditModal(@curso.Id)">Editar</a></li>
+                            <li>
+                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteModal-@curso.Id">Eliminar</button>
+                            </li>
                         </ul>
                     </div>
                     <div class="card-body">
@@ -53,11 +54,35 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Modal de confirmación de eliminación -->
+            <div class="modal fade" id="deleteModal-@curso.Id" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel-@curso.Id" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel-@curso.Id">Confirmar Eliminación</h5>
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            ¿Está seguro de que desea eliminar el curso @curso.NombreCurso?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <form asp-action="DeleteCourse" method="post">
+                                <input type="hidden" name="id" value="@curso.Id" />
+                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
         @if (esProfesor)
         {
             <div class="col-md-4 mb-4">
-                <button class="btn create-course-card" style="margin-left: 40px; margin-top: 40px;" type="button" data-bs-toggle="modal" data-bs-target="#createCourseModal">
+                <button class="btn create-course-card" style="margin-left: 40px; margin-top: 40px;" type="button" data-bs-toggle="modal" data-bs-target="#createCourseModal" onclick="resetCreateModal()">
                     <div class="create-course-button">
                         <span style="font-size: 2rem;">+</span>
                     </div>
@@ -67,8 +92,6 @@
         }
     </div>
 </div> 
-
-
 <!-- Modal -->
 <div class="modal fade" id="createCourseModal" tabindex="-1" role="dialog" aria-labelledby="createCourseModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -80,29 +103,26 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="create-course-form" action="dashboard-html" method="post" onsubmit="return validateForm()">
+                <form id="create-course-form" action="/Home/CreateOrEditCourse" method="post" onsubmit="return validateForm()">
+                    <input type="hidden" id="course_id" name="Id" value="0" />
                     <div class="form-group">
                         <label for="course_name">Nombre del curso:</label>
-                        <input type="text" class="form-control" id="course_name" name="course_name" maxlength="50" required>
+                        <input type="text" class="form-control" id="course_name" name="NombreCurso" maxlength="50" required>
                     </div>
                     <br />
                     <div class="form-group">
                         <label for="course_description">Descripción del curso:</label>
-                        <textarea class="form-control" id="course_description" name="course_description" required></textarea>
+                        <textarea class="form-control" id="course_description" name="Descripcion" required></textarea>
                     </div>
                     <br />
                     <div class="form-group">
                         <label for="course_image">Imagen del curso:</label>
-                        <input type="file" class="form-control" id="course_image" name="course_image" accept="image/*" required>
+                        <input type="url" class="form-control" id="course_image" name="ImagenUrl">
                     </div>
                     <br />
                     <div class="form-group">
                         <label for="course_year">Año:</label>
-                        <select class="form-control" id="course_year" name="course_year" required>
-                            <option value="2020">2020</option>
-                            <option value="2021">2021</option>
-                            <option value="2022">2022</option>
-                            <option value="2023">2023</option>
+                        <select class="form-control" id="course_year" name="Year" required>
                             <option value="2024">2024</option>
                             <option value="2025">2025</option>
                             <option value="2026">2026</option>
@@ -111,7 +131,7 @@
                     <br />
                     <div class="form-group">
                         <label for="course_term">Cuatrimestre:</label>
-                        <select class="form-control" id="course_term" name="course_term" required>
+                        <select class="form-control" id="course_term" name="Cuatrimestre" required>
                             <option value="ICO2024">ICO2024</option>
                             <option value="IICO2024">IICO2024</option>
                             <option value="IIICO2024">IIICO2024</option>
@@ -149,6 +169,34 @@
                     $('.dropdown-menu').hide();
                 }
             });
+
+
+            // Inicializar el modal de edición con datos
+            window.openEditModal = function (cursoId) {
+                $.get("/Home/EditCourse/" + cursoId, function (data) {
+                    $("#course_id").val(data.id);
+                    $("#course_name").val(data.nombreCurso);
+                    $("#course_description").val(data.descripcion);
+                    $("#course_image").val(data.imagenUrl);
+                    $("#course_year").val(data.year);
+                    $("#course_term").val(data.cuatrimestre);
+                    $("#createCourseModalLabel").text("Editar Curso");
+                    $("#create-course-form").attr("action", "/Home/CreateOrEditCourse");
+                    $("#createCourseModal").modal("show");
+                });
+            };
+
+            // Limpiar el modal de creación
+            window.resetCreateModal = function () {
+                $("#course_id").val(0);
+                $("#course_name").val("");
+                $("#course_description").val("");
+                $("#course_image").val("");
+                $("#course_year").val("2024");
+                $("#course_term").val("ICO2024");
+                $("#createCourseModalLabel").text("Crear Curso");
+                $("#create-course-form").attr("action", "/Home/CreateOrEditCourse");
+            };
         });
     </script>
 }
