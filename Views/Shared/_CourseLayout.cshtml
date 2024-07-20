@@ -1,0 +1,35 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+<div>
+    <h3>@ViewBag.CourseName</h3>
+</div>
+<hr />
+
+<div class="d-flex" id="course-wrapper">
+    <div class="border-end bg-white" id="course-sidebar-wrapper">
+        <div class="list-group list-group-flush">
+            <a asp-action="Hogar" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Hogar</a>
+            <a asp-action="Asignaciones" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Asignaciones</a>
+            <a asp-action="Notas" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Assignments</a>
+            <a asp-action="Asistencia" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Notas</a>
+            <a asp-action="Anuncios" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Anuncios</a>
+            <a asp-action="Personas" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Personas</a>
+        </div>
+    </div>
+    <div id="course-page-content-wrapper">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $("#menu-toggle").click(function (e) {
+            e.preventDefault();
+            $("#course-wrapper").toggleClass("toggled");
+        });
+    </script>
+}

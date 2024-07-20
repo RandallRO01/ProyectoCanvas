@@ -5,6 +5,8 @@
     bool esProfesor = ViewBag.EsProfesor;
 }
 
+<h1>Tablero</h1>
+<hr />
 
 <div class="container">
     <div class="row">
@@ -29,7 +31,7 @@
                         </ul>
                     </div>
                     <div class="card-body">
-                        <a href="#" class="card-title" style="text-decoration: none">@curso.NombreCurso</a>
+                        <a href="@Url.Action("Hogar", "Cursos", new { id = curso.Id })" class="card-title" style="text-decoration: none">@curso.NombreCurso</a>
                         <p class="card-text">@curso.Descripcion</p>
                         <a class="card-link" href="#">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-clipboard2-check" viewBox="0 0 16 16">
@@ -152,6 +154,11 @@
     </div>
 </div>
 
+<footer class="border-top footer text-muted">
+    <div class="container">
+        &copy; 2024 - ProyectoCanvas - Grupo4
+    </div>
+</footer>
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>

@@ -1,0 +1,20 @@
+﻿@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Hogar";
+}
+
+<div class="welcome-container">
+    <h1 class="welcome-title">¡Bienvenido!</h1>
+    <div class="course-info">
+        <div class="course-details">
+            <p><strong>Nombre del curso:</strong> @ViewBag.CourseName</p>
+            <p><strong>Descripción:</strong> @ViewBag.CourseDescription</p>
+            <p><strong>Docente:</strong> Christian García</p>
+            <p><strong>Cuatrimestre:</strong> @ViewBag.CourseCuatri</p>
+        </div>
+        <div class="course-image">
+            <img src="https://png.pngtree.com/png-clipart/20230914/original/pngtree-student-engagement-clipart-four-college-students-standing-and-holding-books-cartoon-png-image_12151456.png" alt="Estudiantes">
+        </div>
+    </div>
+</div>
+
