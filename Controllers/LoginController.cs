@@ -56,6 +56,14 @@ namespace ProyectoCanvas.Controllers
             return Json(new { success = true, redirectUrl = Url.Action("Index", "Home") });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Home");
+        }
+
         private bool VerifyPlainPassword(string password, byte[] storedPassword)
         {
             // Convertir storedPassword de VARBINARY a string para comparar en texto plano

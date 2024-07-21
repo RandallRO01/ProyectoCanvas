@@ -30,6 +30,9 @@ namespace ProyectoCanvas.Controllers
 
             var cursos = await _repositorioCursos.ObtenerCursos();
 
+            // Pasar el nombre del usuario autenticado a la vista
+            ViewBag.UserName = User.Identity.Name;
+
             return View(cursos);
         }
 

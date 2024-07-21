@@ -14,11 +14,11 @@
         <div class="border-right" style="background-color: #9032bb;" id="sidebar-wrapper">
             <div>
                 <img src="https://ulacitalumni.com/wp-content/uploads/2019/09/ulacit_logo.png" alt="Imagen Logo Ulacit"
-                     style="height: 50px; width: 100px; margin-top: 12px; margin-left: 6px;text-align: center"/>
+                     style="height: 50px; width: 100px; margin-top: 12px; margin-left: 6px;text-align: center" />
             </div>
             <br />
             <div class="list-group list-group-flush" style="text-align:center;">
-                <a href="#" class="list-group-item list-group-item-action text-white" style="background-color: #9032bb;">
+                <a href="#" class="list-group-item list-group-item-action text-white" style="background-color: #9032bb;" data-bs-toggle="offcanvas" data-bs-target="#offcanvasUser" aria-controls="offcanvasUser">
                     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
                         <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
                         <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1" />
@@ -38,29 +38,53 @@
                     </svg>
                     Anuncios
                 </a>
-                
             </div>
         </div>
+
+        <!-- Page Content -->
         <div id="page-content-wrapper">
             <main role="main" class="pb-3">
                 @RenderBody()
             </main>
         </div>
     </div>
-    <script>
-        $("#menu-toggle").click(function (e) {
-            e.preventDefault();
-            $("#wrapper").toggleClass("toggled");
-        });
-    </script>
+
+    <!-- Offcanvas -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasUser" aria-labelledby="offcanvasUserLabel">
+        <div class="offcanvas-header">
+            <h5 id="offcanvasUserLabel">Perfil de Usuario</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="text-center mb-4">
+                <div class="user-circle" id="userInitials"></div>
+                <div class="mt-4">
+                    <h6 id="userName"></h6>
+                </div>
+            </div>
+            <button id="logoutButton" class="btn btn-danger w-100">Cerrar sesión</button>
+        </div>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <script>
+        $(document).ready(function () {
+            // Obtener información del usuario
+            var userName = '@User.Identity.Name';
+            var userInitials = userName.split(' ').map(function (n) { return n[0]; }).join('');
 
-    
+            // Asignar información al offcanvas
+            $("#userInitials").text(userInitials);
+            $("#userName").text(userName);
+
+            // Cerrar sesión
+            $("#logoutButton").click(function () {
+                window.location.href = '@Url.Action("Index", "Login")';
+            });
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
-
 </body>
 </html>

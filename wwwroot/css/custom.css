@@ -301,3 +301,31 @@ a.create-course-card:active {
     color: #343a40; 
     border-color: #C5C2B7; 
 }
+
+/*Offcanvas boton cuenta dashboard*/
+.user-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    color: white;
+    font-size: 2rem;
+    margin: 0 auto;
+}
+.offcanvas-start {
+    width: 400px;
+    left: 109px; /* Ensure it appears right next to the sidebar */
+}
+
+.offcanvas-backdrop.show {
+    opacity: 0; /* Elimina el oscurecimiento del fondo */
+    pointer-events: none; /* Evita que el fondo sea interactivo */
+}
+
+/* Ajustar la duración de la transición */
+.offcanvas {
+    transition: transform 0.3s ease-in-out;
+}
