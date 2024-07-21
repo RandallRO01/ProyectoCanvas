@@ -135,7 +135,7 @@
     color: red;
 }
 
-/*Boton crear curso*/
+/* Botón crear curso */
 body {
     font-family: Arial, sans-serif;
 }
@@ -149,7 +149,7 @@ body {
 
 .course-card, .create-course-card {
     display: flex;
-    flex-direction: column;
+    flex-direction: ;
     align-items: center;
     justify-content: center;
     width: 200px;
@@ -184,6 +184,7 @@ body {
     color: #0cb7f2;
     font-size: 16px;
     margin-top: 10px;
+    margin-right: 70px;
 }
 
 a.create-course-card:link,
@@ -192,6 +193,19 @@ a.create-course-card:hover,
 a.create-course-card:active {
     text-decoration: none;
     color: inherit;
+}
+
+/* Nuevos estilos para centrar el botón en su contenedor */
+.d-flex {
+    display: flex !important;
+}
+
+.justify-content-center {
+    justify-content: center !important;
+}
+
+.align-items-center {
+    align-items: center !important;
 }
 /* _CourseLayout specific styles */
 #course-wrapper {
@@ -278,4 +292,12 @@ a.create-course-card:active {
 .course-image img {
     width: 300px;
     height: auto;
+}
+
+/*Asignaciones*/
+
+.accordion-button-custom {
+    background-color: #C5C2B7; 
+    color: #343a40; 
+    border-color: #C5C2B7; 
 }

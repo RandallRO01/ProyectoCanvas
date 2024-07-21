@@ -1,0 +1,118 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Mvc
+@using Microsoft.AspNetCore.Mvc.RazorPages
+@model ProyectoCanvas.ViewModels.DetallesAsignacionViewModel
+
+@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Detalles de la Asignación";
+}
+
+<div class="container mt-3">
+    <div class="text-center">
+        <h1>Detalles de la Asignación</h1>
+        <br />
+    </div>
+    <div class="mb-3">
+        <h2>@Model.Asignacion.Nombre</h2>
+        <strong>Descripción:</strong>
+        <p>@Model.Asignacion.Descripcion</p>
+        <strong>Fecha Límite:</strong>
+        <p>@Model.Asignacion.FechaLimite?.ToString("dd/MM/yyyy HH:mm")</p>
+        @if (Model.Asignacion.Archivo != null && Model.Asignacion.Archivo.Length > 0)
+        {
+            <strong>Archivo:</strong>
+            <p><a href="@Url.Action("DescargarAsignacion", new { id = Model.Asignacion.Id })" target="_blank">Descargar Archivo</a></p>
+        }
+    </div>
+    <hr />
+    <!-- Formulario para que los estudiantes suban sus trabajos -->
+    @if (User.FindFirstValue(ClaimTypes.Role) == "Estudiante")
+    {
+        if (Model.FechaLimitePasada)
+        {
+            <div class="alert alert-danger" role="alert">
+                El tiempo de entrega ha expirado.
+            </div>
+        }
+        else if (Model.HaSubidoTrabajo)
+        {
+            <div class="alert alert-success" role="alert">
+                Felicidades, ya has entregado este trabajo. Revisa si no tienes otros pendientes.
+            </div>
+        }
+        else
+        {
+            <div class="mt-2 text-center">
+                <h2>Subir Trabajo</h2>
+                <form method="post" enctype="multipart/form-data" action="@Url.Action("SubirTrabajoEstudiante", "Cursos")">
+                    <div class="form-group">
+                        <label for="ArchivoTrabajo">Archivo</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="ArchivoTrabajo" name="Archivo" required>
+                            <label class="custom-file-label" for="ArchivoTrabajo">Seleccionar archivo</label>
+                        </div>
+                    </div>
+                    <input type="hidden" name="Id_Asignacion" value="@Model.Asignacion.Id" />
+                    <input type="hidden" name="Id_Estudiante" value="@User.FindFirstValue(ClaimTypes.NameIdentifier)" />
+                    <br />
+                    <button type="submit" class="btn btn-primary">Subir Trabajo</button>
+                </form>
+            </div>
+        }
+    }
+
+    <!-- Listado de trabajos subidos por los estudiantes (Visible para profesores) -->
+    @if (User.FindFirstValue(ClaimTypes.Role) == "Profesor")
+    {
+        <div class="mt-5">
+            <h4>Trabajos de Estudiantes</h4>
+            <ul class="list-group">
+                @foreach (var trabajo in Model.TrabajosEstudiantes)
+                {
+                    <li class="list-group-item">
+                        @trabajo.NombreEstudiante - @trabajo.FechaSubida
+                        <a href="@Url.Action("DescargarTrabajoEstudiante", new { id = trabajo.Id })" class="btn btn-link">Descargar Trabajo</a>
+                        <form method="post" action="@Url.Action("CalificarTrabajo", "Cursos")" class="d-inline">
+                            <input type="hidden" name="Id" value="@trabajo.Id" />
+                            <div class="form-group d-inline">
+                                <label for="Calificacion-@trabajo.Id">Calificación:</label>
+                                <input type="number" class="form-control d-inline" style="width: 60px;" id="Calificacion-@trabajo.Id" name="Calificacion" value="@trabajo.Calificacion" min="0" max="@Model.Asignacion.TotalPuntos" />
+                                / @Model.Asignacion.TotalPuntos
+                            </div>
+                            <button type="submit" class="btn btn-link" style="margin-left: 120px">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-floppy" viewBox="0 0 16 16">
+                                    <path d="M11 2H9v3h2z" />
+                                    <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z" />
+                                </svg>
+                            </button>
+                        </form>
+                        <form method="post" action="@Url.Action("EliminarTrabajoEstudiante", "Cursos")" class="d-inline">
+                            <input type="hidden" name="Id" value="@trabajo.Id" />
+                            <button type="submit" class="btn btn-link text-danger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+                                </svg>
+                            </button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    <a href="@Url.Action("Asignaciones", new { id = Model.Asignacion.Id_Curso })" class="btn btn-link mt-3">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="black" class="bi bi-arrow-return-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5" />
+        </svg>
+    </a>
+</div>
+
+@section Scripts {
+    <script>
+        $('.custom-file-input').on('change', function () {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').html(fileName);
+        });
+    </script>
+}

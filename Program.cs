@@ -10,6 +10,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IRepositorioUsuarios, RepositorioUsuarios>();
 builder.Services.AddScoped<IRepositorioRoles, RepositorioRoles>();
 builder.Services.AddScoped<IRepositorioCursos, RepositorioCursos>();
+builder.Services.AddScoped<IRepositorioAsignaciones, RepositorioAsignaciones>();
 
 // Configure authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

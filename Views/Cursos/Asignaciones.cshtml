@@ -1,13 +1,193 @@
-﻿@{
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Mvc
+@using Microsoft.AspNetCore.Mvc.RazorPages
+@model ProyectoCanvas.ViewModels.AsignacionesViewModel
+
+@{
     Layout = "_CourseLayout";
     ViewData["Title"] = "Asignaciones";
 }
 
-<div class="row">
-    <div class="col-md-9 course-content">
-        <h2>Asignaciones</h2>
-        <p>Contenido de asignaciones</p>
+<div class="container mt-1">
+    <div class="mb-4">
+        <h1>@Model.Curso.NombreCurso - Asignaciones</h1>
+    </div>
+
+    <div class="accordion" id="accordionPanelsStayOpenExample">
+        @for (int semana = 0; semana < 16; semana++)
+        {
+            var asignaciones = Model.AsignacionesPorSemana.ContainsKey(semana) ? Model.AsignacionesPorSemana[semana] : new List<Asignacion>();
+            var semanaTitulo = semana == 0 ? "Contenido General" : $"Semana {semana}";
+
+            <div class="accordion-item mb-4">
+                <h2 class="accordion-header" id="panelsStayOpen-heading-@semana">
+                    <button class="accordion-button accordion-button-custom @(semana == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapse-@semana" aria-expanded="@(semana == 0 ? "true" : "false")" aria-controls="panelsStayOpen-collapse-@semana">
+                        @semanaTitulo
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapse-@semana" class="accordion-collapse collapse @(semana == 0 ? "show" : "")" aria-labelledby="panelsStayOpen-heading-@semana">
+                    <div class="accordion-body">
+                        @if (asignaciones.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var asignacion in asignaciones)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <a href="@Url.Action("DetallesAsignacion", new { id = asignacion.Id })" class="text-black" style="text-decoration: none;">@asignacion.Nombre</a>
+                                        @if (Model.EsProfesor)
+                                        {
+                                            <div class="dropdown">
+                                                <button class="btn btn-link" id="dropdownMenuButton-@asignacion.Id" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="black" class="bi bi-three-dots" viewBox="0 0 16 16">
+                                                        <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+                                                    </svg>
+                                                </button>
+                                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-@asignacion.Id">
+                                                    <a class="dropdown-item" href="#" onclick="openEditModal(@asignacion.Id, @ViewBag.CourseId)">Editar</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal-@asignacion.Id">Eliminar</a>
+                                                </div>
+                                            </div>
+                                        }
+                                    </li>
+
+                                    <!-- Modal de confirmación de eliminación -->
+                                    @if (Model.EsProfesor)
+                                    {
+                                        <div class="modal fade" id="deleteModal-@asignacion.Id" tabindex="-1" aria-labelledby="deleteModalLabel-@asignacion.Id" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel-@asignacion.Id">Confirmar Eliminación</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        ¿Está seguro de que desea eliminar la asignación @asignacion.Nombre?
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <form asp-action="EliminarAsignacion" method="post">
+                                                            <input type="hidden" name="id" value="@asignacion.Id" />
+                                                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <div class="text-center">
+                                <p>No hay asignaciones para esta semana.</p>
+                            </div>
+                        }
+                        @if (Model.EsProfesor)
+                        {
+                            <div class="text-center">
+                                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#crearAsignacionModal" onclick="openCreateModal(@semana, '@semanaTitulo')">Añadir Asignación</button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
+<!-- Modal de creación/edición de asignación -->
+@if (Model.EsProfesor)
+{
+    <!-- Modal de creación/edición de asignación -->
+    <div class="modal fade" id="crearAsignacionModal" tabindex="-1" role="dialog" aria-labelledby="crearAsignacionModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="crearAsignacionModalLabel">Crear Asignación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" enctype="multipart/form-data" action="@Url.Action("CrearEditarAsignacion", "Cursos")">
+                        <div class="form-group">
+                            <label for="Nombre">Nombre</label>
+                            <input type="text" class="form-control" id="Nombre" name="Nombre" required />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label for="Descripcion">Descripción</label>
+                            <textarea class="form-control" id="Descripcion" name="Descripcion" required></textarea>
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label for="FechaLimite">Fecha Límite</label>
+                            <input type="datetime-local" class="form-control" id="FechaLimite" name="FechaLimite" />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label for="Archivo">Archivo</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="Archivo" name="Archivo">
+                                <label class="custom-file-label" for="Archivo">Seleccionar archivo</label>
+                            </div>
+                            <small id="archivoActual" class="form-text text-muted"></small>
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label for="TotalPuntos">Total de puntos</label>
+                            <input type="number" class="form-control" id="TotalPuntos" name="TotalPuntos" />
+                        </div>
+                        <br />
+                        <input type="hidden" id="AsignacionId" name="Id" value="0" />
+                        <input type="hidden" name="Semana" id="Semana" value="0" />
+                        <input type="hidden" name="Id_Curso" value="@Model.Curso.Id" />
+                        <input type="hidden" name="Id_Persona" value="@User.FindFirstValue(ClaimTypes.NameIdentifier)" />
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
+@section Scripts {
+    <script>
+        function openCreateModal(semana, semanaTitulo) {
+            $('#crearAsignacionModalLabel').text('Crear Asignación - ' + semanaTitulo);
+            $('#Nombre').val('');
+            $('#Descripcion').val('');
+            $('#url').val('');
+            $('#Archivo').val(null);
+            $('#archivoActual').text('');
+            $('#Semana').val(semana);
+            $('#AsignacionId').val(0);
+            $('#FechaLimite').val('');
+            $('#TotalPuntos').val(''); 
+            $('#crearAsignacionModal').modal('show');
+        }
+
+        function openEditModal(asignacionId, courseId) {
+            $.get("/Cursos/ObtenerAsignacion/" + asignacionId, function (data) {
+                $('#crearAsignacionModalLabel').text('Editar Asignación - Semana ' + (data.semana == 0 ? 'Contenido General' : data.semana));
+                $('#Nombre').val(data.nombre);
+                $('#Descripcion').val(data.descripcion);
+                $('#url').val(data.url);
+                $('#Archivo').val(null);
+                $('#archivoActual').text('Archivo actual: ' + data.nombreArchivo);
+                $('#AsignacionId').val(data.id);
+                $('#Semana').val(data.semana);
+                $('#FechaLimite').val(data.fechaLimite);
+                $('#TotalPuntos').val(data.totalPuntos);
+                $('#crearAsignacionModal').modal('show');
+            });
+        }
+
+        $('.custom-file-input').on('change', function () {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').html(fileName);
+        });
+    </script>
+}

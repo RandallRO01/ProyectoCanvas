@@ -12,8 +12,8 @@
         <div class="list-group list-group-flush">
             <a asp-action="Hogar" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Hogar</a>
             <a asp-action="Asignaciones" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Asignaciones</a>
-            <a asp-action="Notas" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Assignments</a>
-            <a asp-action="Asistencia" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Notas</a>
+            <a asp-action="Notas" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Notas</a>
+            <a asp-action="Asistencia" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Asistencia</a>
             <a asp-action="Anuncios" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Anuncios</a>
             <a asp-action="Personas" asp-route-id="@ViewBag.CourseId" class="list-group-item list-group-item-action list-group-item-light p-3 course-list-group-item">Personas</a>
         </div>
@@ -25,6 +25,7 @@
     </div>
 </div>
 
+
 @section Scripts {
     <script>
         $("#menu-toggle").click(function (e) {
@@ -32,4 +33,5 @@
             $("#course-wrapper").toggleClass("toggled");
         });
     </script>
+    @RenderSection("Scripts", required: false)
 }

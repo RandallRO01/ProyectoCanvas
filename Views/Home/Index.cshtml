@@ -83,14 +83,15 @@
         }
         @if (esProfesor)
         {
-            <div class="col-md-4 mb-4">
-                <button class="btn create-course-card" style="margin-left: 40px; margin-top: 40px;" type="button" data-bs-toggle="modal" data-bs-target="#createCourseModal" onclick="resetCreateModal()">
+            <div class="col-md-4 mb-4 d-flex justify-content-center align-items-center">
+                <button class="btn create-course-card" type="button" data-bs-toggle="modal" data-bs-target="#createCourseModal" onclick="resetCreateModal()">
                     <div class="create-course-button">
                         <span style="font-size: 2rem;">+</span>
                     </div>
                     <div class="create-course-text">Crear Curso</div>
                 </button>
             </div>
+
         }
     </div>
 </div> 
@@ -111,17 +112,17 @@
                         <label for="course_name">Nombre del curso:</label>
                         <input type="text" class="form-control" id="course_name" name="NombreCurso" maxlength="50" required>
                     </div>
-                    <br />
+                    
                     <div class="form-group">
                         <label for="course_description">Descripción del curso:</label>
                         <textarea class="form-control" id="course_description" name="Descripcion" required></textarea>
                     </div>
-                    <br />
+                    
                     <div class="form-group">
                         <label for="course_image">Imagen del curso:</label>
                         <input type="url" class="form-control" id="course_image" name="ImagenUrl">
                     </div>
-                    <br />
+                    
                     <div class="form-group">
                         <label for="course_year">Año:</label>
                         <select class="form-control" id="course_year" name="Year" required>
@@ -130,7 +131,7 @@
                             <option value="2026">2026</option>
                         </select>
                     </div>
-                    <br />
+                    
                     <div class="form-group">
                         <label for="course_term">Cuatrimestre:</label>
                         <select class="form-control" id="course_term" name="Cuatrimestre" required>
@@ -139,7 +140,7 @@
                             <option value="IIICO2024">IIICO2024</option>
                         </select>
                     </div>
-                    <br />
+                    
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
                         <input type="submit" class="btn btn-primary" value="Guardar Curso">
