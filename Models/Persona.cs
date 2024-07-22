@@ -12,7 +12,8 @@ namespace ProyectoCanvas.Models
         public string ApellidoMaterno { get; set; }
         public DateTime FechaNac { get; set; }
         public int Id_rol { get; set; }
-        public Role Rol { get; set; }
+        //public Role Rol { get; set; }
+        public string Rol { get; set; }
         public ICollection<PersonaCurso> PersonaCursos { get; set; }
     }
 }

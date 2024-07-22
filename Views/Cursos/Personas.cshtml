@@ -1,0 +1,87 @@
+﻿@model IEnumerable<ProyectoCanvas.Models.Persona>
+
+@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Personas del Curso";
+    var esProfesor = User.IsInRole("Profesor");
+}
+
+<div class="container">
+    <h2>Personas del Curso</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Rol</th>
+                @if (esProfesor)
+                {
+                    <th>Acciones</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var persona in Model)
+            {
+                <tr>
+                    <td>@persona.Nombre @persona.ApellidoPaterno @persona.ApellidoMaterno</td>
+                    <td>@persona.Rol</td>
+                    @if (esProfesor)
+                    {
+                        <td>
+                            <form method="post" asp-action="EliminarPersona" asp-controller="Cursos" asp-route-cursoId="@ViewBag.CourseId" asp-route-personaId="@persona.Id" onsubmit="return confirm('¿Estás seguro de que deseas eliminar a esta persona del curso?');">
+                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                            </form>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (esProfesor)
+    {
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarEstudianteModal">Agregar Estudiante</button>
+    }
+</div>
+
+@if (esProfesor)
+{
+    <div class="modal fade" id="agregarEstudianteModal" tabindex="-1" role="dialog" aria-labelledby="agregarEstudianteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agregarEstudianteModalLabel">Agregar Estudiante</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="estudiantesDisponibles">
+                        <!-- Aquí se cargarán los estudiantes disponibles -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#agregarEstudianteModal').on('show.bs.modal', function () {
+                var cursoId = '@ViewBag.CourseId';
+                $.get('@Url.Action("ObtenerEstudiantesDisponibles")', { cursoId: cursoId }, function (data) {
+                    $('#estudiantesDisponibles').html(data);
+                });
+            });
+
+            $(document).on('click', '.btn-add-student', function () {
+                var personaId = $(this).data('persona-id');
+                var cursoId = '@ViewBag.CourseId';
+                $.post('@Url.Action("AgregarEstudiante")', { cursoId: cursoId, personaId: personaId }, function () {
+                    location.reload();
+                });
+            });
+        });
+    </script>
+}

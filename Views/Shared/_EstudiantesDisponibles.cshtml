@@ -1,0 +1,21 @@
+﻿@model IEnumerable<ProyectoCanvas.Models.Persona>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var estudiante in Model)
+        {
+            <tr>
+                <td>@estudiante.Nombre @estudiante.ApellidoPaterno @estudiante.ApellidoMaterno</td>
+                <td>
+                    <button class="btn btn-primary btn-add-student" data-persona-id="@estudiante.Id">Agregar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

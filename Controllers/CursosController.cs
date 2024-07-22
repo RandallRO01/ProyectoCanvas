@@ -15,10 +15,11 @@ namespace ProyectoCanvas.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IRepositorioAsistencias _repositorioAsistencias;
         private readonly IRepositorioAnuncios _repositorioAnuncios;
+        private readonly IRepositorioPersonas _repositorioPersonas;
 
-        public CursosController(IRepositorioCursos repositorioCursos, IRepositorioRoles repositorioRoles, 
-            IRepositorioAsignaciones repositorioAsignaciones,ILogger<HomeController> logger,
-            IRepositorioAsistencias repositorioAsistencias, IRepositorioAnuncios repositorioAnuncios)
+        public CursosController(IRepositorioCursos repositorioCursos, IRepositorioRoles repositorioRoles,
+            IRepositorioAsignaciones repositorioAsignaciones, ILogger<HomeController> logger,
+            IRepositorioAsistencias repositorioAsistencias, IRepositorioAnuncios repositorioAnuncios, IRepositorioPersonas repositorioPersonas)
         {
             _repositorioCursos = repositorioCursos;
             _repositorioRoles = repositorioRoles;
@@ -26,6 +27,7 @@ namespace ProyectoCanvas.Controllers
             _logger = logger;
             _repositorioAsistencias = repositorioAsistencias;
             _repositorioAnuncios = repositorioAnuncios;
+            _repositorioPersonas = repositorioPersonas;
         }
 
         private async Task SetCourseViewBag(int id)
@@ -449,10 +451,46 @@ namespace ProyectoCanvas.Controllers
             return RedirectToAction("Anuncios", new { id = anuncio.Id_Curso });
         }
 
+        // Personas
         public async Task<IActionResult> Personas(int id)
         {
-            await SetCourseViewBag(id);
-            return View();
+            var personas = await _repositorioPersonas.ObtenerPersonasPorCurso(id);
+            ViewBag.CourseId = id;
+
+            // Para el modal de agregar estudiantes
+            var estudiantesDisponibles = await _repositorioPersonas.ObtenerEstudiantesDisponibles(id);
+            ViewBag.EstudiantesDisponibles = estudiantesDisponibles;
+
+            return View(personas);
+        }
+
+        public async Task<IActionResult> ObtenerEstudiantesDisponibles(int cursoId)
+        {
+            var estudiantes = await _repositorioPersonas.ObtenerEstudiantesDisponibles(cursoId);
+            return PartialView("_EstudiantesDisponibles", estudiantes);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AgregarEstudiante(int cursoId, int personaId)
+        {
+            // Verifica que el curso y la persona existan antes de intentar insertarlos
+            var curso = await _repositorioCursos.ObtenerCursoPorId(cursoId);
+            var persona = await _repositorioPersonas.ObtenerPersonasPorCurso(personaId);
+
+            if (curso != null && persona != null)
+            {
+                await _repositorioPersonas.AgregarPersonaACurso(personaId, cursoId);
+                return RedirectToAction("Personas", new { id = cursoId });
+            }
+
+            return NotFound();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EliminarPersona(int cursoId, int personaId)
+        {
+            await _repositorioPersonas.EliminarPersonaDeCurso(cursoId, personaId);
+            return RedirectToAction("Personas", new { id = cursoId });
         }
     }
 }
