@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
 using ProyectoCanvas.Models;
+using ProyectoCanvas.ViewModels;
 
 namespace ProyectoCanvas.Services
 {
@@ -11,6 +12,7 @@ namespace ProyectoCanvas.Services
         Task Crear(Cursos curso);
         Task Actualizar(Cursos curso);
         Task Eliminar(int id);
+        Task<IEnumerable<EstudianteViewModel>> ObtenerEstudiantesConCorreoPorCurso(int idCurso);
     }
 
     public class RepositorioCursos : IRepositorioCursos
@@ -61,5 +63,21 @@ namespace ProyectoCanvas.Services
             using var connection = new SqlConnection(_connectionString);
             await connection.ExecuteAsync("DELETE FROM Cursos WHERE Id = @Id", new { Id = id });
         }
+
+        public async Task<IEnumerable<EstudianteViewModel>> ObtenerEstudiantesConCorreoPorCurso(int idCurso)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = @"
+                SELECT p.Id, p.Nombre, p.Apellido_Paterno, p.Apellido_Materno, u.Correo
+                FROM Persona p
+                INNER JOIN Usuarios u ON p.Id = u.Id
+                INNER JOIN Cursos ce ON p.Id = ce.Id
+                WHERE ce.Id = @IdCurso";
+                return await connection.QueryAsync<EstudianteViewModel>(query, new { IdCurso = idCurso });
+            }
+        }
+
+
     }
 }

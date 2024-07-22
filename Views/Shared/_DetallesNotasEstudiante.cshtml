@@ -1,0 +1,25 @@
+﻿@model ProyectoCanvas.ViewModels.DetallesEstudianteViewModel
+
+<h2>Detalles de las Notas del Estudiante</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Asignación</th>
+            <th>Fecha de Envío</th>
+            <th>Puntaje</th>
+            <th>Puntaje Máximo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var trabajo in Model.Trabajos)
+        {
+            <tr>
+                <td>@trabajo.NombreAsignacion</td>
+                <td>@trabajo.FechaSubida.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@trabajo.Calificacion</td>
+                <td>@trabajo.PuntajeMaximo</td>
+            </tr>
+        }
+    </tbody>
+</table>

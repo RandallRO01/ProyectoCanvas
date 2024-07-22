@@ -1,0 +1,63 @@
+﻿@model IEnumerable<ProyectoCanvas.ViewModels.AnuncioViewModel>
+
+@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Anuncios";
+}
+
+<div class="container">
+    <h2>Anuncios</h2>
+    <div class="list-group">
+        @foreach (var item in Model)
+        {
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="mb-1">@item.Titulo</h5>
+                        <p class="mb-1">@item.Descripcion</p>
+                        <small>Publicado por: Prof.@item.NombreProfesor</small>
+                    </div>
+                    <div class="text-right">
+                        <br />
+                        <small>Publicado en:<br /><strong>@item.FechaPublicacion.ToString("dd/MM/yyyy hh:mm tt")</strong></small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (User.IsInRole("Profesor"))
+    {
+        <div>
+            <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#crearAnuncioModal">Crear Anuncio</button>
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="crearAnuncioModal" tabindex="-1" role="dialog" aria-labelledby="crearAnuncioModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="crearAnuncioModalLabel">Crear Anuncio</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-action="CrearAnuncio">
+                    <div class="form-group">
+                        <label for="Titulo">Título</label>
+                        <input type="text" class="form-control" id="Titulo" name="Titulo" required>
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label for="Descripcion">Descripción</label>
+                        <textarea class="form-control" id="Descripcion" name="Descripcion" rows="3" required></textarea>
+                    </div>
+                    <br />
+                    <input type="hidden" id="Id_Curso" name="Id_Curso" value="@ViewBag.CourseId">
+                    <button type="submit" class="btn btn-primary">Crear Anuncio</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,118 @@
+﻿@model ProyectoCanvas.ViewModels.NotasDetalleViewModel
+
+@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Notas";
+}
+
+<div class="container">
+    <h2>Calificaciones del Curso</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre / Apellidos</th>
+                <th>Correo del Estudiante</th>
+                <th>Notas del Estudiante</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var calificacion in Model.CalificacionesEstudiantes)
+            {
+                <tr>
+                    <td>@calificacion.NombreCompleto</td>
+                    <td>@calificacion.Correo</td>
+                    <td>@calificacion.NotaTotal%</td>
+                    <td>
+                        <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#detallesModal-@calificacion.EstudianteId">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
+                                <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Modales -->
+@foreach (var calificacion in Model.CalificacionesEstudiantes)
+{
+    <div class="modal fade" id="detallesModal-@calificacion.EstudianteId" tabindex="-1" aria-labelledby="detallesModalLabel-@calificacion.EstudianteId" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detallesModalLabel-@calificacion.EstudianteId">Calificaciones de @calificacion.NombreCompleto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="detalles-content-@calificacion.EstudianteId">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Asignación</th>
+                                    <th>Fecha de Envío</th>
+                                    <th>Puntaje</th>
+                                    <th>Puntaje Máximo</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var asignacion in calificacion.Asignaciones)
+                                {
+                                    <tr>
+                                        <td>@asignacion.NombreAsignacion</td>
+                                        <td>@asignacion.FechaEnvio.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <input type="number" class="form-control" value="@asignacion.Puntaje" min="0" max="@asignacion.PuntajeMaximo" data-id="@asignacion.Id" data-original="@asignacion.Puntaje" />
+                                        </td>
+                                        <td>@asignacion.PuntajeMaximo</td>
+                                        <td>
+                                            <button class="btn btn-primary btn-save" data-id="@asignacion.Id">Guardar</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.btn-save').on('click', function () {
+                var id = $(this).data('id');
+                var puntajeInput = $(this).closest('tr').find('input[type="number"]');
+                var puntaje = puntajeInput.val();
+                var original = puntajeInput.data('original');
+
+                if (puntaje != original) {
+                    $.post('@Url.Action("CalificarTrabajo", "Cursos")', { id: id, calificacion: puntaje }, function () {
+                        puntajeInput.data('original', puntaje);
+                        alert('Calificación guardada correctamente');
+                    });
+                }
+            });
+
+            $('[data-bs-toggle="modal"]').on('click', function () {
+                var estudianteId = $(this).data('bs-target').split('-')[1];
+                var contentDiv = $('#detalles-content-' + estudianteId);
+
+                if (!contentDiv.hasClass('loaded')) {
+                    $.get('@Url.Action("DetallesNotasEstudiante", "Cursos")', { idEstudiante: estudianteId, idCurso: @ViewBag.CourseId }, function (data) {
+                        contentDiv.html(data);
+                        contentDiv.addClass('loaded');
+                    });
+                }
+            });
+        });
+    </script>
+}

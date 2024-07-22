@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProyectoCanvas.Models;
 using ProyectoCanvas.Services;
 using ProyectoCanvas.ViewModels;
@@ -9,14 +10,22 @@ namespace ProyectoCanvas.Controllers
     public class CursosController : Controller
     {
         private readonly IRepositorioCursos _repositorioCursos;
+        private readonly IRepositorioRoles _repositorioRoles;
         private readonly IRepositorioAsignaciones _repositorioAsignaciones;
         private readonly ILogger<HomeController> _logger;
+        private readonly IRepositorioAsistencias _repositorioAsistencias;
+        private readonly IRepositorioAnuncios _repositorioAnuncios;
 
-        public CursosController(IRepositorioCursos repositorioCursos, IRepositorioAsignaciones repositorioAsignaciones,ILogger<HomeController> logger)
+        public CursosController(IRepositorioCursos repositorioCursos, IRepositorioRoles repositorioRoles, 
+            IRepositorioAsignaciones repositorioAsignaciones,ILogger<HomeController> logger,
+            IRepositorioAsistencias repositorioAsistencias, IRepositorioAnuncios repositorioAnuncios)
         {
             _repositorioCursos = repositorioCursos;
+            _repositorioRoles = repositorioRoles;
             _repositorioAsignaciones = repositorioAsignaciones;
             _logger = logger;
+            _repositorioAsistencias = repositorioAsistencias;
+            _repositorioAnuncios = repositorioAnuncios;
         }
 
         private async Task SetCourseViewBag(int id)
@@ -105,9 +114,11 @@ namespace ProyectoCanvas.Controllers
                 return NotFound();
             }
 
-            await _repositorioAsignaciones.EliminarAsignacion(id);
+            int cursoId = asignacion.Id_Curso;
+            await SetCourseViewBag(cursoId);
 
-            return RedirectToAction("Asignaciones", new { id = asignacion.Id_Curso });
+            await _repositorioAsignaciones.EliminarAsignacion(id);
+            return RedirectToAction("Asignaciones", new { id = cursoId });
         }
 
         public async Task<IActionResult> ObtenerAsignacion(int id)
@@ -133,29 +144,19 @@ namespace ProyectoCanvas.Controllers
 
         public async Task<IActionResult> DetallesAsignacion(int id)
         {
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            bool esProfesor = await _repositorioRoles.EsUsuarioEnRol(usuarioId, "Profesor");
+            ViewBag.EsProfesor = esProfesor;
+
             var asignacion = await _repositorioAsignaciones.ObtenerAsignacionPorId(id);
-            if (asignacion == null)
-            {
-                return NotFound();
-            }
-
-            var trabajos = await _repositorioAsignaciones.ObtenerTrabajosPorAsignacion(id);
-
-            bool haSubidoTrabajo = false;
-            if (User.IsInRole("Estudiante"))
-            {
-                var estudianteId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-                haSubidoTrabajo = trabajos.Any(t => t.Id_Estudiante == estudianteId);
-            }
-
-            bool fechaLimitePasada = asignacion.FechaLimite.HasValue && DateTime.Now > asignacion.FechaLimite.Value;
+            var trabajosEstudiantes = await _repositorioAsignaciones.ObtenerTrabajosPorAsignacion(id);
 
             var viewModel = new DetallesAsignacionViewModel
             {
                 Asignacion = asignacion,
-                TrabajosEstudiantes = trabajos.ToList(),
-                HaSubidoTrabajo = haSubidoTrabajo,
-                FechaLimitePasada = fechaLimitePasada,
+                TrabajosEstudiantes = (List<TrabajoEstudiante>)trabajosEstudiantes,
+                HaSubidoTrabajo = trabajosEstudiantes.Any(t => t.Id_Estudiante == usuarioId),
+                FechaLimitePasada = asignacion.FechaLimite < DateTime.Now,
                 FechaLimite = asignacion.FechaLimite
             };
 
@@ -289,19 +290,163 @@ namespace ProyectoCanvas.Controllers
         public async Task<IActionResult> Notas(int id)
         {
             await SetCourseViewBag(id);
-            return View();
+
+            // Obtener calificaciones
+            var calificaciones = await _repositorioAsignaciones.ObtenerCalificacionesPorCurso(id);
+
+            var calificacionesEstudiantes = calificaciones.Select(c => new CalificacionEstudianteViewModel
+            {
+                EstudianteId = c.EstudianteId,
+                NombreCompleto = c.NombreCompleto,
+                Correo = c.Correo,
+                NotaTotal = c.NotaTotal,
+                Asignaciones = c.Asignaciones.Select(a => new AsignacionCalificacionViewModel
+                {
+                    Id = a.Id,
+                    NombreAsignacion = a.NombreAsignacion,
+                    FechaEnvio = a.FechaEnvio,
+                    Puntaje = a.Puntaje,
+                    PuntajeMaximo = a.PuntajeMaximo
+                }).ToList()
+            }).ToList();
+
+            // Crear y poblar el modelo de vista
+            var viewModel = new NotasDetalleViewModel
+            {
+                CalificacionesEstudiantes = calificacionesEstudiantes
+            };
+
+            return View(viewModel);
+        }
+
+
+        public async Task<IActionResult> DetallesNotas(int idEstudiante, int idCurso)
+        {
+            var trabajos = await _repositorioAsignaciones.ObtenerTrabajosPorEstudianteYCurso(idEstudiante, idCurso);
+            var viewModel = trabajos.Select(t => new TrabajoEstudianteViewModel
+            {
+                NombreAsignacion = t.Asignacion.Nombre,
+                FechaSubida = t.FechaSubida,
+                Calificacion = (int)t.Calificacion,
+                PuntajeMaximo = t.Asignacion.TotalPuntos
+            }).ToList();
+
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Asistencia(int id)
         {
             await SetCourseViewBag(id);
-            return View();
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            bool esProfesor = await _repositorioRoles.EsUsuarioEnRol(usuarioId, "Profesor");
+
+            ViewBag.EsProfesor = esProfesor;
+
+            if (esProfesor)
+            {
+                var asistencias = await _repositorioAsistencias.ObtenerAsistenciasPorCurso(id);
+                var estudiantes = await _repositorioCursos.ObtenerEstudiantesConCorreoPorCurso(id);
+
+                var viewModel = estudiantes.Select(estudiante => new AsistenciaViewModel
+                {
+                    EstudianteId = estudiante.Id,
+                    NombreCompleto = $"{estudiante.Nombre} {estudiante.ApellidoPaterno} {estudiante.ApellidoMaterno}",
+                    Correo = estudiante.Correo,
+                    Asistencias = asistencias.Where(a => a.PersonaId == estudiante.Id).ToList()
+                }).ToList();
+
+                return View(viewModel);
+            }
+            else
+            {
+                var asistencias = await _repositorioAsistencias.ObtenerAsistenciasPorEstudianteYCurso(id, usuarioId);
+                var estudiante = await _repositorioAsistencias.ObtenerEstudiantePorId(usuarioId); // Método que obtenga los datos del estudiante
+
+                var viewModel = new AsistenciaEstudianteViewModel
+                {
+                    EstudianteId = usuarioId,
+                    NombreCompleto = $"{estudiante.Nombre} {estudiante.ApellidoPaterno} {estudiante.ApellidoMaterno}",
+                    Asistencias = (List<Asistencia>)asistencias,
+                    TotalAusencias = asistencias.Count(a => a.Estado == EstadoAsistencia.Ausente),
+                    TotalPresentes = asistencias.Count(a => a.Estado == EstadoAsistencia.Presente),
+                    TotalTardias = asistencias.Count(a => a.Estado == EstadoAsistencia.Tardia)
+                };
+
+                return View(viewModel);
+            }
         }
 
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> TomarAsistencia(int cursoId, List<AsistenciaInputModel> asistencias)
+        {
+            foreach (var asistenciaInput in asistencias)
+            {
+                var asistencia = new Asistencia
+                {
+                    PersonaId = asistenciaInput.EstudianteId,
+                    CursoId = cursoId,
+                    Fecha = DateTime.Today,
+                    Estado = (EstadoAsistencia)asistenciaInput.Estado
+                };
+
+                await _repositorioAsistencias.CrearAsistencia(asistencia);
+            }
+
+            return RedirectToAction("Asistencia", new { id = cursoId });
+        }     
+
+
+        [HttpPost]
+        [Authorize(Roles = "Profesor")]
+        public async Task<IActionResult> GuardarAsistencia(int estudianteId, int cursoId, DateTime fecha, EstadoAsistencia estado)
+        {
+            var asistencia = new Asistencia
+            {
+                PersonaId = estudianteId,
+                CursoId = cursoId,
+                Fecha = fecha,
+                Estado = estado
+            };
+
+            await _repositorioAsistencias.ActualizarAsistencia(asistencia);
+
+            return Ok();
+        }
+
+        //Anuncios
         public async Task<IActionResult> Anuncios(int id)
         {
             await SetCourseViewBag(id);
-            return View();
+
+            var anuncios = await _repositorioAnuncios.ObtenerAnunciosPorCurso(id);
+
+            var viewModel = anuncios.Select(anuncio => new AnuncioViewModel
+            {
+                Id = anuncio.Id,
+                Titulo = anuncio.Titulo,
+                Descripcion = anuncio.Descripcion,
+                FechaPublicacion = anuncio.FechaPublicacion,
+                NombreProfesor = $"{anuncio.Persona.Nombre} {anuncio.Persona.ApellidoPaterno} {anuncio.Persona.ApellidoMaterno}"
+            }).ToList();
+
+            ViewBag.CourseId = id;
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearAnuncio(Anuncio anuncio)
+        {
+            if (ModelState.IsValid)
+            {
+                anuncio.FechaPublicacion = DateTime.Now;
+                anuncio.Id_Persona = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                await _repositorioAnuncios.CrearAnuncio(anuncio);
+                return RedirectToAction("Anuncios", new { id = anuncio.Id_Curso });
+            }
+            return RedirectToAction("Anuncios", new { id = anuncio.Id_Curso });
         }
 
         public async Task<IActionResult> Personas(int id)

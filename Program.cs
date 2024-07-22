@@ -11,6 +11,8 @@ builder.Services.AddScoped<IRepositorioUsuarios, RepositorioUsuarios>();
 builder.Services.AddScoped<IRepositorioRoles, RepositorioRoles>();
 builder.Services.AddScoped<IRepositorioCursos, RepositorioCursos>();
 builder.Services.AddScoped<IRepositorioAsignaciones, RepositorioAsignaciones>();
+builder.Services.AddScoped<IRepositorioAsistencias, RepositorioAsistencia>();
+builder.Services.AddScoped<IRepositorioAnuncios, RepositorioAnuncios>();
 
 // Configure authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

@@ -67,7 +67,10 @@
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                                         <form asp-action="EliminarAsignacion" method="post">
                                                             <input type="hidden" name="id" value="@asignacion.Id" />
-                                                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                                                            <form method="post" action="@Url.Action("EliminarAsignacion", "Cursos", new { id = Model.Curso.Id })">
+                                                                <input type="hidden" name="id" value="@Model.Curso.Id" />
+                                                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                                                            </form>
                                                         </form>
                                                     </div>
                                                 </div>

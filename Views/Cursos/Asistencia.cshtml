@@ -1,0 +1,135 @@
+﻿@model dynamic
+
+@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Asistencia";
+    bool esProfesor = ViewBag.EsProfesor;
+}
+
+<div class="container">
+    <h2>Asistencia del Curso</h2>
+
+    @if (esProfesor)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre / Apellidos</th>
+                    <th>Correo del Estudiante</th>
+                    <th>A</th>
+                    <th>P</th>
+                    <th>T</th>
+                    <th>Guardar</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var estudiante in Model)
+                {
+                    var asistenciaHoy = ((List<Asistencia>)estudiante.Asistencias).FirstOrDefault(a => a.Fecha.Date == DateTime.Now.Date);
+                    <tr>
+                        <td>@estudiante.NombreCompleto</td>
+                        <td>@estudiante.Correo</td>
+                        <td>
+                            <input type="radio" name="asistencia-@estudiante.EstudianteId" value="0" @(asistenciaHoy != null && asistenciaHoy.Estado == ProyectoCanvas.Models.EstadoAsistencia.Ausente ? "checked" : "") />
+                        </td>
+                        <td>
+                            <input type="radio" name="asistencia-@estudiante.EstudianteId" value="1" @(asistenciaHoy != null && asistenciaHoy.Estado == ProyectoCanvas.Models.EstadoAsistencia.Presente ? "checked" : "") />
+                        </td>
+                        <td>
+                            <input type="radio" name="asistencia-@estudiante.EstudianteId" value="2" @(asistenciaHoy != null && asistenciaHoy.Estado == ProyectoCanvas.Models.EstadoAsistencia.Tardia ? "checked" : "") />
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-save-attendance" data-estudiante-id="@estudiante.EstudianteId" data-curso-id="@ViewBag.CourseId" data-fecha="@DateTime.Now.ToString("yyyy-MM-dd")">Guardar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <h3>@Model.NombreCompleto</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var asistencia in Model.Asistencias)
+                {
+                    <tr>
+                        <td>@asistencia.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@asistencia.Estado.ToString()</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="row">
+            <div class="col-md-4">
+                <h4>Total de Ausencias: @Model.TotalAusencias</h4>
+            </div>
+            <div class="col-md-4">
+                <h4>Total de Presentes: @Model.TotalPresentes</h4>
+            </div>
+            <div class="col-md-4">
+                <h4>Total de Tardías: @Model.TotalTardias</h4>
+            </div>
+        </div>
+    }
+
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmación</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                La asistencia ha sido guardada correctamente.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.btn-save-attendance').on('click', function () {
+                var estudianteId = $(this).data('estudiante-id');
+                var cursoId = $(this).data('curso-id');
+                var fecha = $(this).data('fecha');
+                var estado = $('input[name="asistencia-' + estudianteId + '"]:checked').val();
+
+                $.ajax({
+                    url: '@Url.Action("GuardarAsistencia", "Cursos")',
+                    method: 'POST',
+                    data: {
+                        estudianteId: estudianteId,
+                        cursoId: cursoId,
+                        fecha: fecha,
+                        estado: estado
+                    },
+                    success: function () {
+                        $('#confirmModal').modal('show');
+                        // Reiniciar los valores de los radio buttons
+                        $('input[name="asistencia-' + estudianteId + '"]').prop('checked', false);
+                    },
+                    error: function () {
+                        alert('Ocurrió un error al guardar la asistencia.');
+                    }
+                });
+            });
+        });
+    </script>
+}

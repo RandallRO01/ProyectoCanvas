@@ -1,0 +1,41 @@
+﻿@model ProyectoCanvas.ViewModels.AsistenciaEstudianteViewModel
+
+@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Asistencia";
+}
+
+<div class="container mt-3">
+    <div class="text-center">
+        <h1>Asistencia</h1>
+    </div>
+    <div class="mb-3">
+        <h2>Nombre del estudiante: @Model.NombreCompleto</h2>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th colspan="2" class="text-center">Ausencias</th>
+                        <th colspan="2" class="text-center">Presencias</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">
+                            <input type="radio" name="asistencia" value="0" @(Model.Asistencias.Any(a => a.Estado == ProyectoCanvas.Models.EstadoAsistencia.Ausente) ? "checked" : "") disabled>
+                        </td>
+                        <td class="text-center">
+                            <input type="radio" name="asistencia" value="1" @(Model.Asistencias.Any(a => a.Estado == ProyectoCanvas.Models.EstadoAsistencia.Presente) ? "checked" : "") disabled>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">Tardías</td>
+                        <td class="text-center">Sin registrar</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
