@@ -140,7 +140,8 @@ namespace ProyectoCanvas.Controllers
                 semana = asignacion.Semana,
                 tieneArchivo = asignacion.Archivo != null,
                 totalPuntos = asignacion.TotalPuntos,
-                fechaLimite = asignacion.FechaLimite.HasValue ? asignacion.FechaLimite.Value.ToString("yyyy-MM-ddTHH:mm") : null
+                fechaLimite = asignacion.FechaLimite.HasValue ? asignacion.FechaLimite.Value.ToString("yyyy-MM-ddTHH:mm") : null,
+                nombreEstudiante = asignacion.TrabajosEstudiantes
             });
         }
 

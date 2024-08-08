@@ -12,7 +12,7 @@
 
         // Relaciones
         public Asignacion Asignacion { get; set; }
-        
+
         public string NombreEstudiante { get; set; }
     }
 }

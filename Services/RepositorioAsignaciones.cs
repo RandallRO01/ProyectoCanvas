@@ -112,7 +112,7 @@ namespace ProyectoCanvas.Services
             using (var connection = new SqlConnection(connectionString))
             {
                 var query = @"
-                SELECT te.*, p.Id AS PersonaId, p.Nombre AS NombreEstudiante
+                SELECT te.*, p.Id AS PersonaId, p.Nombre
                 FROM TrabajosEstudiantes te
                 INNER JOIN Persona p ON te.Id_Estudiante = p.Id
                 WHERE te.Id_Asignacion = @Id_Asignacion";
