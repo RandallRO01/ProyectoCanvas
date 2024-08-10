@@ -10,7 +10,7 @@ namespace ProyectoCanvas.Models
         [MaxLength(20)]
         public string Correo { get; set; }
         [MaxLength (20)]
-        public byte[] PasswordHash { get; set; } 
+        public string PasswordHash { get; set; } 
         public int Id_Persona { get; set; }
         public Persona Persona { get; set; }
     }

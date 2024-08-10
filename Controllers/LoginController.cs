@@ -36,7 +36,8 @@ namespace ProyectoCanvas.Controllers
                 return Json(new { success = false, message = "Usuario no encontrado.", field = "correo" });
             }
 
-            if (!VerifyPlainPassword(password, usuario.PasswordHash))
+            // Verificar la contraseña en texto plano
+            if (password != usuario.PasswordHash)
             {
                 return Json(new { success = false, message = "Contraseña incorrecta.", field = "password" });
             }
@@ -64,12 +65,6 @@ namespace ProyectoCanvas.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        private bool VerifyPlainPassword(string password, byte[] storedPassword)
-        {
-            // Convertir storedPassword de VARBINARY a string para comparar en texto plano
-            var storedPasswordString = System.Text.Encoding.UTF8.GetString(storedPassword);
-
-            return password == storedPasswordString;
-        }
+        
     }
 }

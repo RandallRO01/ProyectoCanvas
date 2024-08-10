@@ -297,20 +297,24 @@ namespace ProyectoCanvas.Controllers
             // Obtener calificaciones
             var calificaciones = await _repositorioAsignaciones.ObtenerCalificacionesPorCurso(id);
 
-            var calificacionesEstudiantes = calificaciones.Select(c => new CalificacionEstudianteViewModel
+            var calificacionesEstudiantes = calificaciones.Select(c =>
             {
-                EstudianteId = c.EstudianteId,
-                NombreCompleto = c.NombreCompleto,
-                Correo = c.Correo,
-                NotaTotal = c.NotaTotal,
-                Asignaciones = c.Asignaciones.Select(a => new AsignacionCalificacionViewModel
+                // Filtrar asignaciones válidas
+                var asignacionesValidas = c.Asignaciones.Where(a => a.PuntajeMaximo > 0).ToList();
+
+                // Calcular el promedio
+                double totalPuntosObtenidos = asignacionesValidas.Sum(a => a.Puntaje);
+                double totalPuntosPosibles = asignacionesValidas.Sum(a => a.PuntajeMaximo);
+                double promedio = totalPuntosPosibles > 0 ? (totalPuntosObtenidos / totalPuntosPosibles) * 100 : 0;
+
+                return new CalificacionEstudianteViewModel
                 {
-                    Id = a.Id,
-                    NombreAsignacion = a.NombreAsignacion,
-                    FechaEnvio = a.FechaEnvio,
-                    Puntaje = a.Puntaje,
-                    PuntajeMaximo = a.PuntajeMaximo
-                }).ToList()
+                    EstudianteId = c.EstudianteId,
+                    NombreCompleto = c.NombreCompleto,
+                    Correo = c.Correo,
+                    NotaTotal = (int)promedio,
+                    Asignaciones = c.Asignaciones
+                };
             }).ToList();
 
             // Crear y poblar el modelo de vista
@@ -321,6 +325,42 @@ namespace ProyectoCanvas.Controllers
 
             return View(viewModel);
         }
+
+
+        public async Task<IActionResult> CalcularPromedio(int estudianteId, int cursoId)
+        {
+            // Obtener los trabajos del estudiante para el curso
+            var trabajos = await _repositorioAsignaciones.ObtenerTrabajosPorEstudianteYCurso(estudianteId, cursoId);
+
+            // Filtrar asignaciones que valen más de 0 y preparar los datos para el cálculo
+            var trabajosValidos = trabajos.Where(t => t.Asignacion.TotalPuntos > 0).ToList();
+
+            // Si no hay trabajos válidos, el promedio es 0
+            if (!trabajosValidos.Any())
+            {
+                return Json(new { success = true, promedio = 0 });
+            }
+
+            // Calcular el total de puntos obtenidos y el total de puntos posibles
+            double totalPuntosObtenidos = 0;
+            double totalPuntosPosibles = 0;
+
+            foreach (var trabajo in trabajosValidos)
+            {
+                totalPuntosObtenidos += trabajo.Calificacion ?? 0; // Si no hay calificación, cuenta como 0
+                totalPuntosPosibles += trabajo.Asignacion.TotalPuntos;
+            }
+
+            // Calcular el promedio
+            double promedio = (totalPuntosObtenidos / totalPuntosPosibles) * 100;
+
+            // Devolver el resultado como JSON para mostrar en la vista
+            return Json(new { success = true, promedio = promedio });
+        }
+
+
+
+
 
 
         public async Task<IActionResult> DetallesNotas(int idEstudiante, int idCurso)

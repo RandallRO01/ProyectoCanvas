@@ -112,7 +112,7 @@ namespace ProyectoCanvas.Services
             using (var connection = new SqlConnection(connectionString))
             {
                 var query = @"
-                SELECT te.*, p.Id AS PersonaId, p.Nombre
+                SELECT te.*, p.Id AS PersonaId, p.Nombre, p.Apellido_Paterno
                 FROM TrabajosEstudiantes te
                 INNER JOIN Persona p ON te.Id_Estudiante = p.Id
                 WHERE te.Id_Asignacion = @Id_Asignacion";
@@ -178,46 +178,48 @@ namespace ProyectoCanvas.Services
             using (var connection = new SqlConnection(connectionString))
             {
                 var query = @"
-            SELECT 
-                p.Id AS EstudianteId,
-                p.Nombre + ' ' + p.Apellido_Paterno + ' ' + p.Apellido_Materno AS NombreCompleto,
-                u.Correo,
-                ISNULL(SUM(te.Calificacion), 0) AS NotaTotal,
-                a.Id AS AsignacionId,
-                a.Nombre AS AsignacionNombre,
-                te.FechaSubida,
-                te.Calificacion,
-                a.TotalPuntos AS PuntajeMaximo
-            FROM 
-                Persona p
-                INNER JOIN Usuarios u ON p.Id = u.Id_Persona
-                LEFT JOIN TrabajosEstudiantes te ON p.Id = te.Id_Estudiante
-                LEFT JOIN Asignaciones a ON te.Id_Asignacion = a.Id
-            WHERE 
-                a.Id_Curso = @CursoId
-            GROUP BY 
-                p.Id, p.Nombre, p.Apellido_Paterno, p.Apellido_Materno, u.Correo, a.Id, a.Nombre, te.FechaSubida, te.Calificacion, a.TotalPuntos
-            ORDER BY 
-                p.Nombre, p.Apellido_Paterno";
+                    SELECT 
+                        p.Id AS EstudianteId,
+                        p.Nombre + ' ' + p.Apellido_Paterno + ' ' + p.Apellido_Materno AS NombreCompleto,
+                        u.Correo,
+                        ISNULL(SUM(te.Calificacion), 0) AS NotaTotal,
+                        a.Id AS AsignacionId,
+                        a.Nombre,
+                        te.FechaSubida AS FechaEnvio,
+                        te.Calificacion AS Puntaje,
+                        a.TotalPuntos AS PuntajeMaximo
+                    FROM 
+                        Persona p
+                        INNER JOIN Usuarios u ON p.Id = u.Id_Persona
+                        LEFT JOIN TrabajosEstudiantes te ON p.Id = te.Id_Estudiante
+                        LEFT JOIN Asignaciones a ON te.Id_Asignacion = a.Id
+                    WHERE 
+                        a.Id_Curso = @CursoId
+                    GROUP BY 
+                        p.Id, p.Nombre, p.Apellido_Paterno, p.Apellido_Materno, u.Correo, a.Id, a.Nombre, te.FechaSubida, te.Calificacion, a.TotalPuntos
+                    ORDER BY 
+                        p.Nombre, p.Apellido_Paterno;";
+
 
                 var calificacionesDict = new Dictionary<int, CalificacionEstudianteViewModel>();
 
                 var result = await connection.QueryAsync<CalificacionEstudianteViewModel, AsignacionCalificacionViewModel, CalificacionEstudianteViewModel>(
-                    query,
-                    (estudiante, asignacion) =>
+                query,
+                (estudiante, asignacion) =>
+                {
+                    if (!calificacionesDict.TryGetValue(estudiante.EstudianteId, out var calificacionEstudiante))
                     {
-                        if (!calificacionesDict.TryGetValue(estudiante.EstudianteId, out var calificacionEstudiante))
-                        {
-                            calificacionEstudiante = estudiante;
-                            calificacionEstudiante.Asignaciones = new List<AsignacionCalificacionViewModel>();
-                            calificacionesDict.Add(estudiante.EstudianteId, calificacionEstudiante);
-                        }
+                        calificacionEstudiante = estudiante;
+                        calificacionEstudiante.Asignaciones = new List<AsignacionCalificacionViewModel>();
+                        calificacionesDict.Add(estudiante.EstudianteId, calificacionEstudiante);
+                    }
 
-                        calificacionEstudiante.Asignaciones.Add(asignacion);
-                        return calificacionEstudiante;
-                    },
-                    splitOn: "AsignacionId",
-                    param: new { CursoId = idCurso });
+                    calificacionEstudiante.Asignaciones.Add(asignacion);
+                    return calificacionEstudiante;
+                },
+                splitOn: "AsignacionId",
+                param: new { CursoId = idCurso });
+
 
                 return calificacionesDict.Values.ToList();
             }
@@ -249,9 +251,6 @@ namespace ProyectoCanvas.Services
                 return trabajos;
             }
         }
-
-
-
 
 
 
