@@ -44,7 +44,7 @@
                                                 </button>
                                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-@asignacion.Id">
                                                     <a class="dropdown-item" href="#" onclick="openEditModal(@asignacion.Id, @ViewBag.CourseId)">Editar</a>
-                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal-@asignacion.Id">Eliminar</a>
+                                                    <a class="dropdown-item" href="#" onclick="confirmDelete(@asignacion.Id)">Eliminar</a>
                                                 </div>
                                             </div>
                                         }
@@ -124,7 +124,7 @@
                         <br />
                         <div class="form-group">
                             <label for="FechaLimite">Fecha Límite</label>
-                            <input type="datetime-local" class="form-control" id="FechaLimite" name="FechaLimite" />
+                            <input type="datetime-local" class="form-control" id="FechaLimite" name="FechaLimite" required />
                         </div>
                         <br />
                         <div class="form-group">
@@ -138,7 +138,7 @@
                         <br />
                         <div class="form-group">
                             <label for="TotalPuntos">Total de puntos</label>
-                            <input type="number" class="form-control" id="TotalPuntos" name="TotalPuntos" />
+                            <input type="number" class="form-control" id="TotalPuntos" name="TotalPuntos" min="0" max="100" required/>
                         </div>
                         <br />
                         <input type="hidden" id="AsignacionId" name="Id" value="0" />
@@ -192,5 +192,97 @@
             var fileName = $(this).val().split('\\').pop();
             $(this).next('.custom-file-label').html(fileName);
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("form[action$='CrearEditarAsignacion']");
+            const fechaLimiteInput = document.getElementById("FechaLimite");
+
+            form.addEventListener("submit", function (event) {
+                event.preventDefault(); // Evita el envío del formulario inmediato
+                const fechaLimite = new Date(fechaLimiteInput.value);
+                const ahora = new Date();
+
+                if (fechaLimite < ahora) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Fecha no válida',
+                        text: 'La fecha límite no puede ser en el pasado.'
+                    });
+                } else {
+                    const isEdit = $('#AsignacionId').val() != 0;
+                    const confirmationMessage = isEdit ? "¿Guardar cambios?" : "¿Crear asignación?";
+                    const successMessage = isEdit ? "¡Asignación actualizada con éxito!" : "¡Asignación creada con éxito!";
+                    const alertMessage = isEdit ? "SweetAlert2 is working!" : successMessage;
+
+                    // Mostrar el mensaje de confirmación antes de enviar
+                    Swal.fire({
+                        title: confirmationMessage,
+                        showDenyButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: "Guardar",
+                        denyButtonText: `No guardar`
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: form.action,
+                                method: form.method,
+                                data: new FormData(form),
+                                contentType: false,
+                                processData: false,
+                                success: function (response) {
+                                    Swal.fire(alertMessage).then(() => {
+                                        location.reload(); // Recargar la página para reflejar los cambios
+                                    });
+                                },
+                                error: function () {
+                                    Swal.fire("Error al crear/actualizar la asignación");
+                                }
+                            });
+                        } else if (result.isDenied) {
+                            Swal.fire("Los cambios no han sido guardados", "", "info");
+                        }
+                    });
+                }
+            });
+        });
+
+        function confirmDelete(asignacionId) {
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: "btn btn-success my-2",
+                    cancelButton: "btn btn-danger"
+                },
+                buttonsStyling: false
+            });
+
+            swalWithBootstrapButtons.fire({
+                title: "¿Estás seguro?",
+                text: "¡No podrás revertir esto!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, eliminar",
+                cancelButtonText: "No, cancelar",
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Si se confirma la eliminación, realiza el POST para eliminar
+                    $.post('@Url.Action("EliminarAsignacion", "Cursos")', { id: asignacionId }, function () {
+                        swalWithBootstrapButtons.fire({
+                            title: "¡Eliminado!",
+                            text: "La asignación ha sido eliminada.",
+                            icon: "success"
+                        }).then(() => {
+                            location.reload(); // Recargar la página para reflejar los cambios
+                        });
+                    });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    swalWithBootstrapButtons.fire({
+                        title: "Cancelado",
+                        text: "La asignación está segura",
+                        icon: "error"
+                    });
+                }
+            });
+        }
     </script>
 }

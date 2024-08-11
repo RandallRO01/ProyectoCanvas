@@ -83,6 +83,13 @@ namespace ProyectoCanvas.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (asignacion.FechaLimite < DateTime.Now)
+                {
+                    ModelState.AddModelError("FechaLimite", "La fecha límite no puede ser en el pasado.");
+                    // Podrías retornar una vista aquí con los datos del curso y las asignaciones cargadas nuevamente
+                    return View(asignacion);
+                }
+
                 if (archivo != null && archivo.Length > 0)
                 {
                     using (var memoryStream = new MemoryStream())
@@ -101,10 +108,10 @@ namespace ProyectoCanvas.Controllers
                     await _repositorioAsignaciones.ActualizarAsignacion(asignacion);
                 }
 
-                return RedirectToAction("Asignaciones", new { id = asignacion.Id_Curso });
+                return Json(new { success = true });
             }
 
-            return View(asignacion);
+            return Json(new { success = false });
         }
 
         [HttpPost]
