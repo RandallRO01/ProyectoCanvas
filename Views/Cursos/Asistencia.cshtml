@@ -11,6 +11,16 @@
 
     @if (esProfesor)
     {
+        <!-- Botón para seleccionar la fecha -->
+        <div class="d-flex justify-content-end mb-3">
+            <div class="col-md-2">
+                <input type="date" id="fechaAsistencia" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary" id="btnGuardarAsistencia">Guardar Asistencia</button>
+            </div>
+        </div>
+
         <table class="table">
             <thead>
                 <tr>
@@ -19,10 +29,9 @@
                     <th>A</th>
                     <th>P</th>
                     <th>T</th>
-                    <th>Guardar</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tablaAsistencia">
                 @foreach (var estudiante in Model)
                 {
                     var asistenciaHoy = ((List<Asistencia>)estudiante.Asistencias).FirstOrDefault(a => a.Fecha.Date == DateTime.Now.Date);
@@ -37,9 +46,6 @@
                         </td>
                         <td>
                             <input type="radio" name="asistencia-@estudiante.EstudianteId" value="2" @(asistenciaHoy != null && asistenciaHoy.Estado == ProyectoCanvas.Models.EstadoAsistencia.Tardia ? "checked" : "") />
-                        </td>
-                        <td>
-                            <button class="btn btn-primary btn-save-attendance" data-estudiante-id="@estudiante.EstudianteId" data-curso-id="@ViewBag.CourseId" data-fecha="@DateTime.Now.ToString("yyyy-MM-dd")">Guardar</button>
                         </td>
                     </tr>
                 }
@@ -79,7 +85,6 @@
             </div>
         </div>
     }
-
 </div>
 
 <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
@@ -105,31 +110,87 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('.btn-save-attendance').on('click', function () {
-                var estudianteId = $(this).data('estudiante-id');
-                var cursoId = $(this).data('curso-id');
-                var fecha = $(this).data('fecha');
-                var estado = $('input[name="asistencia-' + estudianteId + '"]:checked').val();
+            // Cargar asistencia al cambiar la fecha
+            $('#fechaAsistencia').on('change', function () {
+                var fechaSeleccionada = $(this).val();
+                cargarAsistencia(fechaSeleccionada);
+            });
+
+            // Función para cargar asistencia
+            function cargarAsistencia(fecha) {
+                $.get('@Url.Action("ObtenerAsistenciaPorFecha", "Cursos")', { cursoId: @ViewBag.CourseId, fecha: fecha }, function (response) {
+                    if (response.success) {
+                        var asistenciaHtml = '';
+                        response.data.forEach(function (estudiante) {
+                            asistenciaHtml += '<tr>';
+                            asistenciaHtml += '<td>' + estudiante.NombreCompleto + '</td>';
+                            asistenciaHtml += '<td>' + estudiante.Correo + '</td>';
+                            asistenciaHtml += '<td><input type="radio" name="asistencia-' + estudiante.PersonaId + '" value="0" ' + (estudiante.Estado == 0 ? 'checked' : '') + ' /></td>';
+                            asistenciaHtml += '<td><input type="radio" name="asistencia-' + estudiante.PersonaId + '" value="1" ' + (estudiante.Estado == 1 ? 'checked' : '') + ' /></td>';
+                            asistenciaHtml += '<td><input type="radio" name="asistencia-' + estudiante.PersonaId + '" value="2" ' + (estudiante.Estado == 2 ? 'checked' : '') + ' /></td>';
+                            asistenciaHtml += '</tr>';
+                        });
+                        $('#tablaAsistencia').html(asistenciaHtml);
+                    } else {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sin Asistencia',
+                            text: 'No se encontró asistencia para la fecha seleccionada.'
+                        });
+                    }
+                });
+            }
+
+            // Guardar asistencia
+            $('#btnGuardarAsistencia').on('click', function () {
+                var faltanOpciones = false;
+
+                Verificar si cada estudiante tiene una opción seleccionada
+                $('#tablaAsistencia tr').each(function () {
+                    if ($(this).find('input[type="radio"]:checked').length === 0) {
+                        faltanOpciones = true;
+                    }
+                });
+
+                if (faltanOpciones) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Faltan opciones',
+                        text: 'Debe seleccionar una opción para todos los estudiantes antes de guardar la asistencia.'
+                    });
+                    return;
+                }
+
+                var cursoId = @ViewBag.CourseId;
+                var fecha = $('#fechaAsistencia').val();
+                var asistencias = [];
+
+                $('#tablaAsistencia tr').each(function () {
+                    var estudianteId = $(this).find('input[type="radio"]').attr('name').split('-')[1];
+                    var estado = $(this).find('input[type="radio"]:checked').val();
+                    asistencias.push({ EstudianteId: estudianteId, CursoId: cursoId, Fecha: fecha, Estado: estado });
+                });
 
                 $.ajax({
                     url: '@Url.Action("GuardarAsistencia", "Cursos")',
                     method: 'POST',
-                    data: {
-                        estudianteId: estudianteId,
-                        cursoId: cursoId,
-                        fecha: fecha,
-                        estado: estado
-                    },
+                    contentType: 'application/json',
+                    data: JSON.stringify(asistencias),
                     success: function () {
                         $('#confirmModal').modal('show');
-                        // Reiniciar los valores de los radio buttons
-                        $('input[name="asistencia-' + estudianteId + '"]').prop('checked', false);
                     },
                     error: function () {
-                        alert('Ocurrió un error al guardar la asistencia.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Ocurrió un error al guardar la asistencia.'
+                        });
                     }
                 });
             });
+
+            // Cargar asistencia de la fecha seleccionada al cargar la página
+            cargarAsistencia($('#fechaAsistencia').val());
         });
     </script>
 }

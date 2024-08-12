@@ -366,10 +366,6 @@ namespace ProyectoCanvas.Controllers
         }
 
 
-
-
-
-
         public async Task<IActionResult> DetallesNotas(int idEstudiante, int idCurso)
         {
             var trabajos = await _repositorioAsignaciones.ObtenerTrabajosPorEstudianteYCurso(idEstudiante, idCurso);
@@ -427,8 +423,6 @@ namespace ProyectoCanvas.Controllers
         }
 
 
-
-
         [HttpPost]
         public async Task<IActionResult> TomarAsistencia(int cursoId, List<AsistenciaInputModel> asistencias)
         {
@@ -446,25 +440,64 @@ namespace ProyectoCanvas.Controllers
             }
 
             return RedirectToAction("Asistencia", new { id = cursoId });
-        }     
+        }
+
+        public async Task<IActionResult> ObtenerAsistenciaPorFecha(int cursoId, DateTime fecha)
+        {
+            // Obtiene las asistencias de un curso y una fecha específica
+            var asistencias = await _repositorioAsistencias.ObtenerAsistenciasPorCursoYFecha(cursoId, fecha);
+
+            // Si existen asistencias, procesarlas para enviarlas a la vista
+            if (asistencias != null && asistencias.Any())
+            {
+                // No necesitas hacer ningún mapeo adicional aquí porque ya tienes los datos en el formato adecuado
+                return Json(new { success = true, data = asistencias });
+            }
+            else
+            {
+                return Json(new { success = false, message = "No se encontró asistencia para la fecha seleccionada." });
+            }
+        }
+
 
 
         [HttpPost]
-        [Authorize(Roles = "Profesor")]
-        public async Task<IActionResult> GuardarAsistencia(int estudianteId, int cursoId, DateTime fecha, EstadoAsistencia estado)
+        public async Task<IActionResult> GuardarAsistencia([FromBody] List<AsistenciaInputModel> asistencias)
         {
-            var asistencia = new Asistencia
+            if (asistencias == null || !asistencias.Any())
             {
-                PersonaId = estudianteId,
-                CursoId = cursoId,
-                Fecha = fecha,
-                Estado = estado
-            };
+                return BadRequest("No se proporcionaron datos de asistencia.");
+            }
 
-            await _repositorioAsistencias.ActualizarAsistencia(asistencia);
+            foreach (var asistenciaInput in asistencias)
+            {
+                // Verificar si ya existe una asistencia para la combinación CursoId, EstudianteId, y Fecha
+                var asistenciaExistente = await _repositorioAsistencias.ObtenerAsistenciasPorEstudianteYFecha(asistenciaInput.CursoId, asistenciaInput.EstudianteId, asistenciaInput.Fecha);
+
+                if (asistenciaExistente != null && asistenciaExistente.Any())
+                {
+                    // Actualiza el estado de asistencia si ya existe
+                    var asistencia = asistenciaExistente.First();
+                    asistencia.Estado = (EstadoAsistencia)asistenciaInput.Estado;
+                    await _repositorioAsistencias.ActualizarAsistencia(asistencia);
+                }
+                else
+                {
+                    // Crea una nueva asistencia si no existe
+                    var nuevaAsistencia = new Asistencia
+                    {
+                        PersonaId = asistenciaInput.EstudianteId,
+                        CursoId = asistenciaInput.CursoId,
+                        Fecha = asistenciaInput.Fecha,
+                        Estado = (EstadoAsistencia)asistenciaInput.Estado
+                    };
+                    await _repositorioAsistencias.CrearAsistencia(nuevaAsistencia);
+                }
+            }
 
             return Ok();
         }
+
 
         //Anuncios
         public async Task<IActionResult> Anuncios(int id)
