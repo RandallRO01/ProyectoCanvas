@@ -70,8 +70,9 @@ namespace ProyectoCanvas.Services
         {
             using var connection = new SqlConnection(_connectionString);
             var query = @"DELETE FROM PersonaCursos
-                          WHERE Id_Persona = @PersonaId AND Id_Curso = @CursoId";
+                  WHERE Id_Persona = @PersonaId AND Id_Curso = @CursoId";
             await connection.ExecuteAsync(query, new { PersonaId = personaId, CursoId = cursoId });
         }
+
     }
 }

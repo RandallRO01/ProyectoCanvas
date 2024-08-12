@@ -504,16 +504,19 @@ namespace ProyectoCanvas.Controllers
         {
             await SetCourseViewBag(id);
 
+            // Obtener los anuncios y ordenarlos por FechaPublicacion en orden descendente
             var anuncios = await _repositorioAnuncios.ObtenerAnunciosPorCurso(id);
 
-            var viewModel = anuncios.Select(anuncio => new AnuncioViewModel
-            {
-                Id = anuncio.Id,
-                Titulo = anuncio.Titulo,
-                Descripcion = anuncio.Descripcion,
-                FechaPublicacion = anuncio.FechaPublicacion,
-                NombreProfesor = $"{anuncio.Persona.Nombre} {anuncio.Persona.ApellidoPaterno} {anuncio.Persona.ApellidoMaterno}"
-            }).ToList();
+            var viewModel = anuncios
+                .OrderByDescending(anuncio => anuncio.FechaPublicacion) // Ordenar por FechaPublicacion en orden descendente
+                .Select(anuncio => new AnuncioViewModel
+                {
+                    Id = anuncio.Id,
+                    Titulo = anuncio.Titulo,
+                    Descripcion = anuncio.Descripcion,
+                    FechaPublicacion = anuncio.FechaPublicacion,
+                    NombreProfesor = $"{anuncio.Persona.Nombre} {anuncio.Persona.ApellidoPaterno} {anuncio.Persona.ApellidoMaterno}"
+                }).ToList();
 
             ViewBag.CourseId = id;
             return View(viewModel);
@@ -570,8 +573,16 @@ namespace ProyectoCanvas.Controllers
         [HttpPost]
         public async Task<IActionResult> EliminarPersona(int cursoId, int personaId)
         {
-            await _repositorioPersonas.EliminarPersonaDeCurso(cursoId, personaId);
-            return RedirectToAction("Personas", new { id = cursoId });
+            try
+            {
+                await _repositorioPersonas.EliminarPersonaDeCurso(personaId, cursoId);
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
+
     }
 }

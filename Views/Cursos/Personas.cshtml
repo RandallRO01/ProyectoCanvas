@@ -19,7 +19,7 @@
                 }
             </tr>
         </thead>
-        <tbody>
+        <tbody id="personasCursoTable">
             @foreach (var persona in Model)
             {
                 <tr>
@@ -28,9 +28,7 @@
                     @if (esProfesor)
                     {
                         <td>
-                            <form method="post" asp-action="EliminarPersona" asp-controller="Cursos" asp-route-cursoId="@ViewBag.CourseId" asp-route-personaId="@persona.Id" onsubmit="return confirm('¿Estás seguro de que deseas eliminar a esta persona del curso?');">
-                                <button type="submit" class="btn btn-danger">Eliminar</button>
-                            </form>
+                            <button class="btn btn-danger btn-eliminar-persona" data-persona-id="@persona.Id">Eliminar</button>
                         </td>
                     }
                 </tr>
@@ -39,7 +37,7 @@
     </table>
     @if (esProfesor)
     {
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarEstudianteModal">Agregar Estudiante</button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarEstudianteModal">+</button>
     }
 </div>
 
@@ -59,6 +57,9 @@
                         <!-- Aquí se cargarán los estudiantes disponibles -->
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                </div>
             </div>
         </div>
     </div>
@@ -68,6 +69,38 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
+            // Función para manejar la eliminación de personas
+            $(document).ready(function () {
+                // Función para manejar la eliminación de personas
+                $(document).on('click', '.btn-eliminar-persona', function () {
+                    var personaId = $(this).data('persona-id');
+                    var cursoId = '@ViewBag.CourseId';
+
+                    Swal.fire({
+                        title: '¿Estás seguro de eliminar a esta persona del curso?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.post('@Url.Action("EliminarPersona", "Cursos")', { cursoId: cursoId, personaId: personaId }, function (response) {
+                                if (response.success) {
+                                    // Recargar la lista de personas
+                                    location.reload();
+                                } else {
+                                    Swal.fire('Error', 'Ocurrió un error al eliminar la persona.', 'error');
+                                }
+                            }).fail(function () {
+                                Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                            });
+                        }
+                    });
+                });
+            });
+
+
+            // Código para manejar la adición de estudiantes, etc. que ya tienes implementado
             $('#agregarEstudianteModal').on('show.bs.modal', function () {
                 var cursoId = '@ViewBag.CourseId';
                 $.get('@Url.Action("ObtenerEstudiantesDisponibles")', { cursoId: cursoId }, function (data) {
