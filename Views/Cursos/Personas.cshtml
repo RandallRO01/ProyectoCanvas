@@ -8,41 +8,96 @@
 
 <div class="container">
     <h2>Personas del Curso</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Rol</th>
+
+    <!-- Tabs para Personas y Grupos -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="personas-tab" data-bs-toggle="tab" data-bs-target="#personas-tab-pane" type="button" role="tab" aria-controls="personas-tab-pane" aria-selected="true">Personas</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="grupos-tab" data-bs-toggle="tab" data-bs-target="#grupos-tab-pane" type="button" role="tab" aria-controls="grupos-tab-pane" aria-selected="false">Grupos</button>
+        </li>
+    </ul>
+
+    <!-- Contenido de las pestañas -->
+    <div class="tab-content" id="myTabContent">
+        <!-- Tab de Personas -->
+        <div class="tab-pane fade show active" id="personas-tab-pane" role="tabpanel" aria-labelledby="personas-tab">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Rol</th>
+                        @if (esProfesor)
+                        {
+                            <th>Acciones</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody id="personasCursoTable">
+                    @foreach (var persona in Model)
+                    {
+                        <tr>
+                            <td>@persona.Nombre @persona.ApellidoPaterno @persona.ApellidoMaterno</td>
+                            <td>@persona.Rol</td>
+                            @if (esProfesor)
+                            {
+                                <td>
+                                    <button class="btn btn-danger btn-eliminar-persona" data-persona-id="@persona.Id">Eliminar</button>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (esProfesor)
+            {
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarEstudianteModal">+</button>
+            }
+        </div>
+
+        <!-- Tab de Grupos -->
+        <div class="tab-pane fade" id="grupos-tab-pane" role="tabpanel" aria-labelledby="grupos-tab">
+            <div class="d-flex justify-content-between mt-3">
+                <h4>Grupos del Curso</h4>
                 @if (esProfesor)
                 {
-                    <th>Acciones</th>
+                    <button id="crearGrupoBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#grupoModal">Crear Grupo</button>
                 }
-            </tr>
-        </thead>
-        <tbody id="personasCursoTable">
-            @foreach (var persona in Model)
-            {
-                <tr>
-                    <td>@persona.Nombre @persona.ApellidoPaterno @persona.ApellidoMaterno</td>
-                    <td>@persona.Rol</td>
-                    @if (esProfesor)
-                    {
-                        <td>
-                            <button class="btn btn-danger btn-eliminar-persona" data-persona-id="@persona.Id">Eliminar</button>
-                        </td>
-                    }
-                </tr>
-            }
-        </tbody>
-    </table>
-    @if (esProfesor)
-    {
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarEstudianteModal">+</button>
-    }
+            </div>
+
+            <div class="accordion mt-3" id="gruposAccordion">
+                @foreach (var grupo in ViewBag.Grupos)
+                {
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-@grupo.Id">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@grupo.Id" aria-expanded="false" aria-controls="collapse-@grupo.Id">
+                                @grupo.Nombre <span class="badge bg-secondary ms-2">@grupo.Personas.Count estudiantes</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-@grupo.Id" class="accordion-collapse collapse" aria-labelledby="heading-@grupo.Id" data-bs-parent="#gruposAccordion">
+                            <div class="accordion-body">
+
+                                <ul>
+                                    @foreach (var persona in grupo.Personas)
+                                    {
+                                        <li>@persona.Nombre @persona.ApellidoPaterno @persona.ApellidoMaterno <span class="text-success">&#10003;</span></li>
+                                    }
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
 </div>
 
 @if (esProfesor)
 {
+    <!-- Modal para agregar estudiantes -->
     <div class="modal fade" id="agregarEstudianteModal" tabindex="-1" role="dialog" aria-labelledby="agregarEstudianteModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -63,47 +118,204 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal para crear/editar grupos -->
+    <div class="modal fade" id="grupoModal" tabindex="-1" role="dialog" aria-labelledby="grupoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="grupoModalLabel">Crear Grupo</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="grupoForm">
+                        <div class="form-group">
+                            <label for="nombreGrupo">Nombre del Grupo</label>
+                            <input type="text" class="form-control" id="nombreGrupo" name="nombreGrupo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="listaEstudiantes">Lista de estudiantes</label>
+                            <ul id="listaEstudiantes">
+                                <!-- Aquí se cargarán los estudiantes del grupo -->
+                            </ul>
+                        </div>
+                        <input type="hidden" id="grupoId" name="grupoId" value="0">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" id="eliminarGrupoBtn" class="btn btn-danger d-none">
+                            <i class="fa fa-trash"></i> Eliminar Grupo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 }
+
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Función para manejar la eliminación de personas
-            $(document).ready(function () {
-                // Función para manejar la eliminación de personas
-                $(document).on('click', '.btn-eliminar-persona', function () {
-                    var personaId = $(this).data('persona-id');
-                    var cursoId = '@ViewBag.CourseId';
+            // Manejar la apertura del acordeón para editar grupo
+            $('#gruposAccordion').on('show.bs.collapse', function (e) {
+                var grupoId = $(e.target).attr('id').split('-')[1];
 
-                    Swal.fire({
-                        title: '¿Estás seguro de eliminar a esta persona del curso?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, eliminar',
-                        cancelButtonText: 'Cancelar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.post('@Url.Action("EliminarPersona", "Cursos")', { cursoId: cursoId, personaId: personaId }, function (response) {
-                                if (response.success) {
-                                    // Recargar la lista de personas
-                                    location.reload();
-                                } else {
-                                    Swal.fire('Error', 'Ocurrió un error al eliminar la persona.', 'error');
-                                }
-                            }).fail(function () {
-                                Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
-                            });
-                        }
-                    });
+                // Obtener el texto del botón, que es el nombre del grupo sin el span del recuento de estudiantes
+                var grupoNombre = $('button.accordion-button[data-bs-target="#collapse-' + grupoId + '"]').contents().filter(function () {
+                    return this.nodeType === 3; // Filtrar solo el texto que no está envuelto en un elemento (como el span)
+                }).text().trim();
+
+                // Cambiar el botón a "Editar Grupo"
+                $('#crearGrupoBtn').text('Editar Grupo').attr('data-bs-target', '#grupoModal');
+                $('#grupoModalLabel').text('Editar Grupo');
+
+                // Cargar solo el nombre del grupo en el formulario
+                $('#nombreGrupo').val(grupoNombre);
+                $('#grupoId').val(grupoId);
+
+                // Mostrar el botón de eliminar grupo
+                $('#eliminarGrupoBtn').removeClass('d-none');
+
+                // Cargar estudiantes suscritos al curso en el modal
+                cargarEstudiantesSuscritos();
+            });
+
+            // Llamar a cargarEstudiantesSuscritos al abrir el modal para crear un grupo
+            $('#crearGrupoBtn').on('click', function () {
+                cargarEstudiantesSuscritos();
+            });
+
+            // Restablecer el modal al cerrarse
+            $('#grupoModal').on('hidden.bs.modal', function () {
+                // Restablecer el botón a "Crear Grupo"
+                $('#crearGrupoBtn').text('Crear Grupo');
+                $('#grupoModalLabel').text('Crear Grupo');
+                $('#nombreGrupo').val('');
+                $('#grupoId').val('0');
+                $('#eliminarGrupoBtn').addClass('d-none');
+                $('#listaEstudiantes').html('');
+            });
+
+            // Manejar el cierre del acordeón para restablecer el botón
+            $('#gruposAccordion').on('hide.bs.collapse', function () {
+                // Restablecer el botón a "Crear Grupo" al cerrar el acordeón
+                $('#crearGrupoBtn').text('Crear Grupo').attr('data-bs-target', '#grupoModal');
+                $('#grupoModalLabel').text('Crear Grupo');
+                $('#nombreGrupo').val('');
+                $('#grupoId').val('0');
+                $('#eliminarGrupoBtn').addClass('d-none');
+                $('#listaEstudiantes').html('');
+            });
+
+            // Manejar la eliminación del grupo
+            $('#eliminarGrupoBtn').on('click', function () {
+                var grupoId = $('#grupoId').val();
+                Swal.fire({
+                    title: '¿Estás seguro de eliminar este grupo?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("EliminarGrupo", "Cursos")', { grupoId: grupoId }, function (response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                Swal.fire('Error', 'Ocurrió un error al eliminar el grupo.', 'error');
+                            }
+                        }).fail(function () {
+                            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                        });
+                    }
                 });
             });
 
+            // Guardar o actualizar grupo
+            $('#grupoForm').on('submit', function (event) {
+                event.preventDefault();
+                var nombreGrupo = $('#nombreGrupo').val();
+                var grupoId = $('#grupoId').val();
+                var cursoId = '@ViewBag.CourseId';
 
-            // Código para manejar la adición de estudiantes, etc. que ya tienes implementado
+                if (grupoId === '0') {
+                    // Crear nuevo grupo
+                    $.post('@Url.Action("CrearGrupo", "Cursos")', { nombreGrupo: nombreGrupo, cursoId: cursoId }, function (response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            Swal.fire('Error', 'Ocurrió un error al crear el grupo.', 'error');
+                        }
+                    }).fail(function () {
+                        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                    });
+                } else {
+                    // Actualizar grupo existente
+                    $.post('@Url.Action("ActualizarGrupo", "Cursos")', { grupoId: grupoId, nombreGrupo: nombreGrupo }, function (response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            Swal.fire('Error', 'Ocurrió un error al actualizar el grupo.', 'error');
+                        }
+                    }).fail(function () {
+                        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                    });
+                }
+            });
+
+            function cargarEstudiantesSuscritos() {
+                var cursoId = '@ViewBag.CourseId';
+                console.log('Cargando estudiantes suscritos para el curso: ' + cursoId); // Verificar que la función se llama
+
+                $.get('@Url.Action("ObtenerEstudiantesSuscritos", "Cursos")', { cursoId: cursoId }, function (data) {
+                    console.log('Datos recibidos:', data); // Verificar los datos recibidos
+                    var estudiantesHtml = '';
+                    $.each(data, function (index, estudiante) {
+                        estudiantesHtml += '<li class="list-group-item d-flex justify-content-between align-items-center">';
+                        estudiantesHtml += estudiante.NombreCompleto || "Estudiante sin nombre";
+                        estudiantesHtml += '<button class="btn btn-primary btn-add-to-group" data-persona-id="' + estudiante.Id + '">Agregar al Grupo</button>';
+                        estudiantesHtml += '</li>';
+                    });
+                    $('#listaEstudiantes').html(estudiantesHtml);
+                }).fail(function () {
+                    Swal.fire('Error', 'No se pudo cargar la lista de estudiantes suscritos.', 'error');
+                });
+            }
+
+
+            // Función para manejar la eliminación de personas
+            $(document).on('click', '.btn-eliminar-persona', function () {
+                var personaId = $(this).data('persona-id');
+                var cursoId = '@ViewBag.CourseId';
+
+                Swal.fire({
+                    title: '¿Estás seguro de eliminar a esta persona del curso?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("EliminarPersona", "Cursos")', { cursoId: cursoId, personaId: personaId }, function (response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                Swal.fire('Error', 'Ocurrió un error al eliminar la persona.', 'error');
+                            }
+                        }).fail(function () {
+                            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                        });
+                    }
+                });
+            });
+
+            // Manejar la adición de estudiantes al curso
             $('#agregarEstudianteModal').on('show.bs.modal', function () {
                 var cursoId = '@ViewBag.CourseId';
-                $.get('@Url.Action("ObtenerEstudiantesDisponibles")', { cursoId: cursoId }, function (data) {
+                $.get('@Url.Action("ObtenerEstudiantesDisponibles", "Cursos")', { cursoId: cursoId }, function (data) {
                     $('#estudiantesDisponibles').html(data);
                 });
             });
@@ -111,10 +323,11 @@
             $(document).on('click', '.btn-add-student', function () {
                 var personaId = $(this).data('persona-id');
                 var cursoId = '@ViewBag.CourseId';
-                $.post('@Url.Action("AgregarEstudiante")', { cursoId: cursoId, personaId: personaId }, function () {
+                $.post('@Url.Action("AgregarEstudiante", "Cursos")', { cursoId: cursoId, personaId: personaId }, function () {
                     location.reload();
                 });
             });
         });
+
     </script>
 }

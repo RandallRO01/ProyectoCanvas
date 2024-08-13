@@ -1,0 +1,34 @@
+﻿@model ProyectoCanvas.ViewModels.CalificacionEstudianteViewModel
+
+@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Notas";
+}
+
+<div class="container">
+    <h2>Mis Calificaciones</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Asignación</th>
+                <th>Fecha de Envío</th>
+                <th>Puntaje Obtenido</th>
+                <th>Puntaje Máximo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var asignacion in Model.Asignaciones)
+            {
+                <tr>
+                    <td>@asignacion.Nombre</td>
+                    <td>@asignacion.FechaEnvio.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@asignacion.Puntaje</td>
+                    <td>@asignacion.PuntajeMaximo</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="text-end">
+        <h4>Nota Total: @Model.NotaTotal%</h4>
+    </div>
+</div>

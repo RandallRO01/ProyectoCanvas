@@ -4,6 +4,7 @@ using ProyectoCanvas.Models;
 using ProyectoCanvas.Services;
 using ProyectoCanvas.ViewModels;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ProyectoCanvas.Controllers
 {
@@ -16,10 +17,12 @@ namespace ProyectoCanvas.Controllers
         private readonly IRepositorioAsistencias _repositorioAsistencias;
         private readonly IRepositorioAnuncios _repositorioAnuncios;
         private readonly IRepositorioPersonas _repositorioPersonas;
+        private readonly IRepositorioGrupos _repositorioGrupos;
 
         public CursosController(IRepositorioCursos repositorioCursos, IRepositorioRoles repositorioRoles,
             IRepositorioAsignaciones repositorioAsignaciones, ILogger<HomeController> logger,
-            IRepositorioAsistencias repositorioAsistencias, IRepositorioAnuncios repositorioAnuncios, IRepositorioPersonas repositorioPersonas)
+            IRepositorioAsistencias repositorioAsistencias, IRepositorioAnuncios repositorioAnuncios, 
+            IRepositorioPersonas repositorioPersonas, IRepositorioGrupos repositorioGrupos)
         {
             _repositorioCursos = repositorioCursos;
             _repositorioRoles = repositorioRoles;
@@ -28,6 +31,7 @@ namespace ProyectoCanvas.Controllers
             _repositorioAsistencias = repositorioAsistencias;
             _repositorioAnuncios = repositorioAnuncios;
             _repositorioPersonas = repositorioPersonas;
+            _repositorioGrupos = repositorioGrupos;
         }
 
         private async Task SetCourseViewBag(int id)
@@ -124,7 +128,7 @@ namespace ProyectoCanvas.Controllers
             }
 
             int cursoId = asignacion.Id_Curso;
-            await SetCourseViewBag(cursoId);
+            await SetCourseViewBag(id);
 
             await _repositorioAsignaciones.EliminarAsignacion(id);
             return RedirectToAction("Asignaciones", new { id = cursoId });
@@ -300,38 +304,65 @@ namespace ProyectoCanvas.Controllers
         public async Task<IActionResult> Notas(int id)
         {
             await SetCourseViewBag(id);
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            bool esProfesor = await _repositorioRoles.EsUsuarioEnRol(usuarioId, "Profesor");
 
-            // Obtener calificaciones
-            var calificaciones = await _repositorioAsignaciones.ObtenerCalificacionesPorCurso(id);
-
-            var calificacionesEstudiantes = calificaciones.Select(c =>
+            if (esProfesor)
             {
-                // Filtrar asignaciones válidas
-                var asignacionesValidas = c.Asignaciones.Where(a => a.PuntajeMaximo > 0).ToList();
+                await SetCourseViewBag(id);
+                // Obtener las calificaciones de todos los estudiantes en el curso
+                var calificaciones = await _repositorioAsignaciones.ObtenerCalificacionesPorCurso(id);
 
-                // Calcular el promedio
-                double totalPuntosObtenidos = asignacionesValidas.Sum(a => a.Puntaje);
-                double totalPuntosPosibles = asignacionesValidas.Sum(a => a.PuntajeMaximo);
+                // Calcular la nota total como se hacía antes para los profesores
+                var viewModel = new NotasDetalleViewModel
+                {
+                    CalificacionesEstudiantes = calificaciones.Select(c =>
+                    {
+                        double totalPuntosObtenidos = c.Asignaciones.Sum(a => a.Puntaje);
+                        double totalPuntosPosibles = c.Asignaciones.Sum(a => a.PuntajeMaximo);
+                        double promedio = totalPuntosPosibles > 0 ? (totalPuntosObtenidos / totalPuntosPosibles) * 100 : 0;
+
+                        return new CalificacionEstudianteViewModel
+                        {
+                            EstudianteId = c.EstudianteId,
+                            NombreCompleto = c.NombreCompleto,
+                            Correo = c.Correo,
+                            NotaTotal = (int)promedio,
+                            Asignaciones = c.Asignaciones
+                        };
+                    }).ToList()
+                };
+
+                return View("Notas", viewModel); // Vista para profesores
+            }
+            else
+            {
+                await SetCourseViewBag(id);
+                // Cálculo para el estudiante
+                var calificaciones = await _repositorioAsignaciones.ObtenerCalificacionesPorEstudiante(usuarioId, id);
+                double totalPuntosObtenidos = calificaciones.Sum(a => a.Puntaje);
+                double totalPuntosPosibles = calificaciones.Sum(a => a.PuntajeMaximo);
                 double promedio = totalPuntosPosibles > 0 ? (totalPuntosObtenidos / totalPuntosPosibles) * 100 : 0;
 
-                return new CalificacionEstudianteViewModel
+                var viewModel = new CalificacionEstudianteViewModel
                 {
-                    EstudianteId = c.EstudianteId,
-                    NombreCompleto = c.NombreCompleto,
-                    Correo = c.Correo,
+                    EstudianteId = usuarioId,
+                    NombreCompleto = User.Identity.Name,
                     NotaTotal = (int)promedio,
-                    Asignaciones = c.Asignaciones
+                    Asignaciones = calificaciones.Select(a => new AsignacionCalificacionViewModel
+                    {
+                        Nombre = a.Nombre,
+                        Puntaje = a.Puntaje,
+                        PuntajeMaximo = a.PuntajeMaximo,
+                        FechaEnvio = a.FechaEnvio
+                    }).ToList()
                 };
-            }).ToList();
 
-            // Crear y poblar el modelo de vista
-            var viewModel = new NotasDetalleViewModel
-            {
-                CalificacionesEstudiantes = calificacionesEstudiantes
-            };
-
-            return View(viewModel);
+                await SetCourseViewBag(id);
+                return View("NotasEstudiante", viewModel); // Vista para estudiantes
+            }
         }
+
 
 
         public async Task<IActionResult> CalcularPromedio(int estudianteId, int cursoId)
@@ -538,15 +569,24 @@ namespace ProyectoCanvas.Controllers
         // Personas
         public async Task<IActionResult> Personas(int id)
         {
+            // Obtener personas asociadas al curso
             var personas = await _repositorioPersonas.ObtenerPersonasPorCurso(id);
-            ViewBag.CourseId = id;
+
+            // Obtener grupos asociados al curso
+            var grupos = await _repositorioGrupos.ObtenerGruposPorCurso(id);
 
             // Para el modal de agregar estudiantes
             var estudiantesDisponibles = await _repositorioPersonas.ObtenerEstudiantesDisponibles(id);
+
+            // Asignar los datos a ViewBag
+            ViewBag.CourseId = id;
+            ViewBag.Grupos = grupos;
             ViewBag.EstudiantesDisponibles = estudiantesDisponibles;
 
+            // Retornar la vista con los datos de personas
             return View(personas);
         }
+
 
         public async Task<IActionResult> ObtenerEstudiantesDisponibles(int cursoId)
         {
@@ -583,6 +623,77 @@ namespace ProyectoCanvas.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerGrupos(int cursoId)
+        {
+            var grupos = await _repositorioGrupos.ObtenerGruposPorCurso(cursoId);
+            return Json(grupos);
+        }
+
+        [HttpPost("CrearGrupo")]
+        public async Task<IActionResult> CrearGrupo(int cursoId, string nombreGrupo)
+        {
+            if (string.IsNullOrEmpty(nombreGrupo))
+            {
+                return Json(new { success = false, message = "El nombre del grupo es requerido." });
+            }
+
+            var grupo = new Grupo
+            {
+                Nombre = nombreGrupo,
+                CursoId = cursoId
+            };
+
+            try
+            {
+                await _repositorioGrupos.CrearGrupo(grupo);
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                // Loguea el error si es necesario
+                return Json(new { success = false, message = "Ocurrió un error al crear el grupo." });
+            }
+        }
+
+
+
+        // Método para eliminar una persona de un grupo
+        [HttpPost]
+        public async Task<IActionResult> EliminarPersonaDeGrupo(int grupoId, int personaId)
+        {
+            await _repositorioGrupos.EliminarPersonaDeGrupo(personaId, grupoId);
+            return Json(new { success = true });
+        }
+
+        // Método para agregar una persona a un grupo
+        [HttpPost]
+        public async Task<IActionResult> AgregarPersonaAGrupo(int grupoId, int personaId)
+        {
+            await _repositorioGrupos.AgregarPersonaAGrupo(personaId, grupoId);
+            return Json(new { success = true });
+        }
+
+        // Método para obtener las personas de un grupo específico (retorna JSON)
+        public async Task<IActionResult> ObtenerPersonasPorGrupo(int grupoId)
+        {
+            var personas = await _repositorioGrupos.ObtenerPersonasPorGrupo(grupoId);
+            return Json(personas);
+        }
+
+        [HttpGet("ObtenerEstudiantesSuscritos")]
+        public async Task<IActionResult> ObtenerEstudiantesSuscritos(int cursoId)
+        {
+            var estudiantes = await _repositorioPersonas.ObtenerPersonasPorCurso(cursoId);
+            var estudiantesData = estudiantes.Select(e => new
+            {
+                e.Id,
+                NombreCompleto = $"{e.Nombre} {e.ApellidoPaterno} {e.ApellidoMaterno}"
+            });
+            return Json(estudiantesData);
+        }
+
 
     }
 }

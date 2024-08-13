@@ -20,6 +20,7 @@ namespace ProyectoCanvas.Services
         Task EliminarTrabajo(int id);
         Task<IEnumerable<CalificacionEstudianteViewModel>> ObtenerCalificacionesPorCurso(int idCurso);
         Task<IEnumerable<TrabajoEstudiante>> ObtenerTrabajosPorEstudianteYCurso(int idEstudiante, int idCurso);
+        Task<IEnumerable<CalificacionAsignacion>> ObtenerCalificacionesPorEstudiante(int estudianteId, int cursoId);
     }
 
     public class RepositorioAsignaciones : IRepositorioAsignaciones
@@ -222,6 +223,20 @@ namespace ProyectoCanvas.Services
 
 
                 return calificacionesDict.Values.ToList();
+            }
+        }
+
+        public async Task<IEnumerable<CalificacionAsignacion>> ObtenerCalificacionesPorEstudiante(int estudianteId, int cursoId)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                var query = @"
+            SELECT a.Nombre, te.Calificacion AS Puntaje, a.TotalPuntos AS PuntajeMaximo, te.FechaSubida AS FechaEnvio 
+            FROM TrabajosEstudiantes te 
+            INNER JOIN Asignaciones a ON te.Id_Asignacion = a.Id
+            WHERE te.Id_Estudiante = @EstudianteId AND a.Id_Curso = @CursoId";
+
+                return await connection.QueryAsync<CalificacionAsignacion>(query, new { EstudianteId = estudianteId, CursoId = cursoId });
             }
         }
 
