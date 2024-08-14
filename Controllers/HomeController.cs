@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoCanvas.Models;
 using ProyectoCanvas.Services;
+using ProyectoCanvas.ViewModels;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -12,13 +13,15 @@ namespace ProyectoCanvas.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IRepositorioRoles _repositorioRoles;
         private readonly IRepositorioCursos _repositorioCursos;
+        private readonly IRepositorioAsignaciones _repositorioAsignaciones;
 
         public HomeController(ILogger<HomeController> logger, IRepositorioRoles repositorioRoles,
-            IRepositorioCursos repositorioCursos)
+            IRepositorioCursos repositorioCursos, IRepositorioAsignaciones repositorioAsignaciones)
         {
             _logger = logger;
             _repositorioRoles = repositorioRoles;
             _repositorioCursos = repositorioCursos;
+            _repositorioAsignaciones = repositorioAsignaciones;
         }
 
         [Authorize]
@@ -29,12 +32,20 @@ namespace ProyectoCanvas.Controllers
             ViewBag.EsProfesor = esProfesor;
 
             var cursos = await _repositorioCursos.ObtenerCursos();
+            var asignacionesPendientes = await _repositorioAsignaciones.ObtenerAsignacionesPendientesPorEstudiante(usuarioId);
+
+            var viewModel = new TableroViewModel
+            {
+                Cursos = cursos,
+                AsignacionesPendientes = asignacionesPendientes
+            };
 
             // Pasar el nombre del usuario autenticado a la vista
             ViewBag.UserName = User.Identity.Name;
 
-            return View(cursos);
+            return View(viewModel);
         }
+
 
         [HttpPost]
         [Authorize(Roles = "Profesor")]

@@ -12,6 +12,7 @@ namespace ProyectoCanvas.Services
         Task EliminarPersonaDeGrupo(int personaId, int grupoId);
         Task<IEnumerable<Grupo>> ObtenerGruposPorCurso(int cursoId);
         Task<IEnumerable<Persona>> ObtenerPersonasPorGrupo(int grupoId);
+        Task<Grupo> ObtenerGrupoPorId(int grupoId);
     }
 
 
@@ -60,6 +61,14 @@ namespace ProyectoCanvas.Services
             INNER JOIN GrupoEstudiantes pg ON p.Id = pg.PersonaId
             WHERE pg.GrupoId = @GrupoId";
             return await connection.QueryAsync<Persona>(query, new { GrupoId = grupoId });
+        }
+
+
+        public async Task<Grupo> ObtenerGrupoPorId(int grupoId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            var query = @"SELECT * FROM Grupos WHERE Id = @GrupoId";
+            return await connection.QuerySingleOrDefaultAsync<Grupo>(query, new { GrupoId = grupoId });
         }
 
     }

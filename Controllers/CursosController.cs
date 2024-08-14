@@ -567,25 +567,33 @@ namespace ProyectoCanvas.Controllers
         }
 
         // Personas
-        public async Task<IActionResult> Personas(int id)
+        public async Task<IActionResult> Personas(int id, int? grupoId = null)
         {
-            // Obtener personas asociadas al curso
             var personas = await _repositorioPersonas.ObtenerPersonasPorCurso(id);
-
-            // Obtener grupos asociados al curso
             var grupos = await _repositorioGrupos.ObtenerGruposPorCurso(id);
-
-            // Para el modal de agregar estudiantes
             var estudiantesDisponibles = await _repositorioPersonas.ObtenerEstudiantesDisponibles(id);
 
-            // Asignar los datos a ViewBag
-            ViewBag.CourseId = id;
-            ViewBag.Grupos = grupos;
-            ViewBag.EstudiantesDisponibles = estudiantesDisponibles;
+            Grupo grupoSeleccionado = null;
+            if (grupoId.HasValue)
+            {
+                grupoSeleccionado = await _repositorioGrupos.ObtenerGrupoPorId(grupoId.Value);
+            }
 
-            // Retornar la vista con los datos de personas
-            return View(personas);
+            var viewModel = new CursoPersonasViewModel
+            {
+                Personas = personas,
+                Grupos = grupos,
+                GrupoSeleccionado = grupoSeleccionado,
+                EstudiantesDisponibles = estudiantesDisponibles
+            };
+
+            ViewBag.CourseId = id;
+            return View(viewModel);
         }
+
+
+
+
 
 
         public async Task<IActionResult> ObtenerEstudiantesDisponibles(int cursoId)

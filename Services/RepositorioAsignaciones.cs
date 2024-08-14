@@ -21,6 +21,7 @@ namespace ProyectoCanvas.Services
         Task<IEnumerable<CalificacionEstudianteViewModel>> ObtenerCalificacionesPorCurso(int idCurso);
         Task<IEnumerable<TrabajoEstudiante>> ObtenerTrabajosPorEstudianteYCurso(int idEstudiante, int idCurso);
         Task<IEnumerable<CalificacionAsignacion>> ObtenerCalificacionesPorEstudiante(int estudianteId, int cursoId);
+        Task<IEnumerable<AsignacionPendienteViewModel>> ObtenerAsignacionesPendientesPorEstudiante(int estudianteId);
     }
 
     public class RepositorioAsignaciones : IRepositorioAsignaciones
@@ -264,6 +265,30 @@ namespace ProyectoCanvas.Services
                 );
 
                 return trabajos;
+            }
+        }
+
+        public async Task<IEnumerable<AsignacionPendienteViewModel>> ObtenerAsignacionesPendientesPorEstudiante(int idEstudiante)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                var query = @"
+                SELECT 
+                    a.Id AS AsignacionId,
+                    a.Nombre AS Titulo,
+                    c.NombreCurso AS NombreCurso,
+                    a.FechaLimite AS FechaVencimiento
+                FROM 
+                    Asignaciones a
+                INNER JOIN 
+                    Cursos c ON a.Id_Curso = c.Id
+                WHERE 
+                    a.Id_Curso IN (SELECT Id_Curso FROM PersonaCursos WHERE Id_Persona = @IdEstudiante)
+                ORDER BY 
+                    a.FechaLimite ASC;";
+
+                var resultado = await connection.QueryAsync<AsignacionPendienteViewModel>(query, new { IdEstudiante = idEstudiante });
+                return resultado;
             }
         }
 

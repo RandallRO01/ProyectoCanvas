@@ -54,20 +54,61 @@
     background-color: rgba(0, 0, 0, 0.2);
 }
 
+.todo-container {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 5px;
+    margin-left: 50px;
+    font-size: 13px;
+}
+
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+
+#listaPorHacer {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    #listaPorHacer li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #ddd;
+    }
+
+        #listaPorHacer li:last-child {
+            border-bottom: none;
+        }
+
+
 /* Estilos del sidebar */
 #sidebar-wrapper {
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    width: 108px;
+    width: 130px;
     background-color: #9032bb;
     overflow-y: auto;
 }
 
 #wrapper {
     display: flex;
-    padding-left: 100px;
+    padding-left: 130px;
 }
 
 #page-content-wrapper {
@@ -317,7 +358,7 @@ a.create-course-card:active {
 }
 .offcanvas-start {
     width: 400px;
-    left: 109px; /* Ensure it appears right next to the sidebar */
+    left: 125px; /* Ensure it appears right next to the sidebar */
 }
 
 .offcanvas-backdrop.show {
