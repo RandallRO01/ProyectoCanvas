@@ -13,6 +13,9 @@ namespace ProyectoCanvas.Services
         Task<IEnumerable<Grupo>> ObtenerGruposPorCurso(int cursoId);
         Task<IEnumerable<Persona>> ObtenerPersonasPorGrupo(int grupoId);
         Task<Grupo> ObtenerGrupoPorId(int grupoId);
+        Task ActualizarGrupo(Grupo grupo);
+        Task EliminarEstudiantesDeGrupo(int grupoId);
+        Task EliminarGrupo(int grupoId);
     }
 
 
@@ -28,9 +31,10 @@ namespace ProyectoCanvas.Services
         public async Task CrearGrupo(Grupo grupo)
         {
             using var connection = new SqlConnection(connectionString);
-            var query = @"INSERT INTO Grupos (Nombre, CursoId) VALUES (@Nombre, @CursoId)";
-            await connection.ExecuteAsync(query, grupo);
+            var query = @"INSERT INTO Grupos (Nombre, CursoId) OUTPUT INSERTED.Id VALUES (@Nombre, @CursoId)";
+            grupo.Id = await connection.QuerySingleAsync<int>(query, grupo);
         }
+
 
         public async Task AgregarPersonaAGrupo(int personaId, int grupoId)
         {
@@ -49,9 +53,35 @@ namespace ProyectoCanvas.Services
         public async Task<IEnumerable<Grupo>> ObtenerGruposPorCurso(int cursoId)
         {
             using var connection = new SqlConnection(connectionString);
-            var query = @"SELECT * FROM Grupos WHERE CursoId = @CursoId";
-            return await connection.QueryAsync<Grupo>(query, new { CursoId = cursoId });
+            var query = @"
+                SELECT g.*, p.*
+                FROM Grupos g
+                LEFT JOIN GrupoEstudiantes ge ON g.Id = ge.GrupoId
+                LEFT JOIN Persona p ON ge.PersonaId = p.Id
+                WHERE g.CursoId = @CursoId";
+
+            var grupoDictionary = new Dictionary<int, Grupo>();
+
+            var result = await connection.QueryAsync<Grupo, Persona, Grupo>(query, (grupo, persona) =>
+            {
+                if (!grupoDictionary.TryGetValue(grupo.Id, out var grupoEntry))
+                {
+                    grupoEntry = grupo;
+                    grupoEntry.Personas = new List<Persona>();
+                    grupoDictionary.Add(grupo.Id, grupoEntry);
+                }
+
+                if (persona != null)
+                {
+                    grupoEntry.Personas.Add(persona);
+                }
+
+                return grupoEntry;
+            }, new { CursoId = cursoId });
+
+            return grupoDictionary.Values;
         }
+
 
         public async Task<IEnumerable<Persona>> ObtenerPersonasPorGrupo(int grupoId)
         {
@@ -69,6 +99,27 @@ namespace ProyectoCanvas.Services
             using var connection = new SqlConnection(connectionString);
             var query = @"SELECT * FROM Grupos WHERE Id = @GrupoId";
             return await connection.QuerySingleOrDefaultAsync<Grupo>(query, new { GrupoId = grupoId });
+        }
+
+        public async Task ActualizarGrupo(Grupo grupo)
+        {
+            using var connection = new SqlConnection(connectionString);
+            var query = @"UPDATE Grupos SET Nombre = @Nombre WHERE Id = @Id";
+            await connection.ExecuteAsync(query, grupo);
+        }
+
+        public async Task EliminarEstudiantesDeGrupo(int grupoId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            var query = @"DELETE FROM GrupoEstudiantes WHERE GrupoId = @GrupoId";
+            await connection.ExecuteAsync(query, new { GrupoId = grupoId });
+        }
+
+        public async Task EliminarGrupo(int grupoId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            var query = @"DELETE FROM Grupos WHERE Id = @GrupoId";
+            await connection.ExecuteAsync(query, new { GrupoId = grupoId });
         }
 
     }

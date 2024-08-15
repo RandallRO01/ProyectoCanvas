@@ -591,11 +591,6 @@ namespace ProyectoCanvas.Controllers
             return View(viewModel);
         }
 
-
-
-
-
-
         public async Task<IActionResult> ObtenerEstudiantesDisponibles(int cursoId)
         {
             var estudiantes = await _repositorioPersonas.ObtenerEstudiantesDisponibles(cursoId);
@@ -640,31 +635,84 @@ namespace ProyectoCanvas.Controllers
         }
 
         [HttpPost("CrearGrupo")]
-        public async Task<IActionResult> CrearGrupo(int cursoId, string nombreGrupo)
+        public async Task<IActionResult> CrearGrupo(int cursoId, string nombreGrupo, List<int> estudiantesSeleccionados, int grupoId = 0)
         {
             if (string.IsNullOrEmpty(nombreGrupo))
             {
                 return Json(new { success = false, message = "El nombre del grupo es requerido." });
             }
 
-            var grupo = new Grupo
-            {
-                Nombre = nombreGrupo,
-                CursoId = cursoId
-            };
-
             try
             {
-                await _repositorioGrupos.CrearGrupo(grupo);
+                if (grupoId > 0)
+                {
+                    // Actualizar grupo existente
+                    var grupoExistente = await _repositorioGrupos.ObtenerGrupoPorId(grupoId);
+                    if (grupoExistente == null)
+                    {
+                        return Json(new { success = false, message = "El grupo no existe." });
+                    }
+
+                    grupoExistente.Nombre = nombreGrupo;
+                    await _repositorioGrupos.ActualizarGrupo(grupoExistente);
+
+                    // Eliminar estudiantes actuales del grupo (limpiar tabla GrupoEstudiantes)
+                    await _repositorioGrupos.EliminarEstudiantesDeGrupo(grupoId);
+
+                    // Asignar estudiantes seleccionados al grupo
+                    foreach (var estudianteId in estudiantesSeleccionados)
+                    {
+                        await _repositorioGrupos.AgregarPersonaAGrupo(estudianteId, grupoId);
+                    }
+                }
+                else
+                {
+                    // Crear nuevo grupo
+                    var grupo = new Grupo
+                    {
+                        Nombre = nombreGrupo,
+                        CursoId = cursoId
+                    };
+
+                    await _repositorioGrupos.CrearGrupo(grupo);
+
+                    // Asignar estudiantes al nuevo grupo
+                    foreach (var estudianteId in estudiantesSeleccionados)
+                    {
+                        await _repositorioGrupos.AgregarPersonaAGrupo(estudianteId, grupo.Id);
+                    }
+                }
+
                 return Json(new { success = true });
             }
             catch (Exception ex)
             {
-                // Loguea el error si es necesario
-                return Json(new { success = false, message = "Ocurrió un error al crear el grupo." });
+                Console.WriteLine($"Error: {ex.Message}");
+                return Json(new { success = false, message = "Ocurrió un error al guardar el grupo." });
             }
         }
 
+
+        // Método para eliminar un grupo completo
+        [HttpPost]
+        public async Task<IActionResult> EliminarGrupo(int grupoId)
+        {
+            try
+            {
+                // Primero, elimina todas las relaciones de estudiantes con el grupo
+                await _repositorioGrupos.EliminarEstudiantesDeGrupo(grupoId);
+
+                // Luego, elimina el grupo
+                await _repositorioGrupos.EliminarGrupo(grupoId);
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return Json(new { success = false, message = "Ocurrió un error al eliminar el grupo." });
+            }
+        }
 
 
         // Método para eliminar una persona de un grupo

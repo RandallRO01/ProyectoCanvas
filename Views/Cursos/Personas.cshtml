@@ -43,11 +43,7 @@
                             @if (esProfesor)
                             {
                                 <td>
-                                    <form asp-action="EliminarPersona" method="post">
-                                        <input type="hidden" name="personaId" value="@persona.Id" />
-                                        <input type="hidden" name="cursoId" value="@ViewBag.CourseId" />
-                                        <button type="submit" class="btn btn-danger btn-eliminar-persona">Eliminar</button>
-                                    </form>
+                                    <button class="btn btn-danger btn-eliminar-persona" data-persona-id="@persona.Id">Eliminar</button>
                                 </td>
                             }
                         </tr>
@@ -75,11 +71,11 @@
                 {
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="heading-@grupo.Id">
-                            <button class="accordion-button @Model.GrupoSeleccionado?.Id == grupo.Id ? "" : "collapsed"" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@grupo.Id" aria-expanded="@Model.GrupoSeleccionado?.Id == grupo.Id ? "true" : "false"" aria-controls="collapse-@grupo.Id">
+                            <button class="accordion-button @Model.GrupoSeleccionado?.Id == grupo.Id ? " " : " collapsed"" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@grupo.Id" aria-expanded="@Model.GrupoSeleccionado?.Id == grupo.Id ? " true" : "false" " aria-controls="collapse-@grupo.Id">
                                 @grupo.Nombre <span class="badge bg-secondary ms-2">@grupo.Personas.Count estudiantes</span>
                             </button>
                         </h2>
-                        <div id="collapse-@grupo.Id" class="accordion-collapse collapse @Model.GrupoSeleccionado?.Id == grupo.Id ? "show" : """" aria-labelledby="heading-@grupo.Id" data-bs-parent="#gruposAccordion">
+                        <div id="collapse-@grupo.Id" class="accordion-collapse collapse @Model.GrupoSeleccionado?.Id == grupo.Id ? " show" : "" "" aria-labelledby="heading-@grupo.Id" data-bs-parent="#gruposAccordion">
                             <div class="accordion-body">
                                 <ul>
                                     @foreach (var persona in grupo.Personas)
@@ -131,67 +127,85 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="grupoForm" method="post" action="@Url.Action("GuardarGrupo", "Cursos")">
+                    <form id="grupoForm" method="post" action="@Url.Action("CrearGrupo", "Cursos")">
                         <div class="form-group">
                             <label for="nombreGrupo">Nombre del Grupo</label>
                             <input type="text" class="form-control" id="nombreGrupo" name="nombreGrupo" required>
                         </div>
                         <div class="form-group">
                             <label for="listaEstudiantes">Lista de estudiantes</label>
-                            <ul id="listaEstudiantes">
+                            <ul id="listaEstudiantes" class="list-group">
                                 @foreach (var estudiante in Model.EstudiantesDisponibles)
                                 {
-                                    <li class="list-group-item">
-                                        <input type="checkbox" name="estudiantesSeleccionados" value="@estudiante.Id">
-                                        @estudiante.NombreCompleto
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>@estudiante.Nombre</span>
+                                        <input type="checkbox" class="form-check-input estudiante-checkbox" id="estudiante-@estudiante.Id" name="estudiantesSeleccionados" value="@estudiante.Id">
+                                        <span class="checkmark text-success d-none">&#10003;</span>
                                     </li>
                                 }
                             </ul>
                         </div>
+                        <input type="hidden" id="cursoId" name="cursoId" value="@ViewBag.CourseId" />
                         <input type="hidden" id="grupoId" name="grupoId" value="0">
                         <button type="submit" class="btn btn-primary">Guardar</button>
                         <button type="button" id="eliminarGrupoBtn" class="btn btn-danger d-none">
                             <i class="fa fa-trash"></i> Eliminar Grupo
                         </button>
                     </form>
+
                 </div>
             </div>
         </div>
     </div>
+
 }
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Lógica para editar grupo
+            // Inicialización de arrays para almacenar los estudiantes seleccionados
+            var estudiantesSeleccionados = [];
+
+            // Lógica para editar grupo al desplegar el acordeón
             $('#gruposAccordion').on('show.bs.collapse', function (e) {
                 var grupoId = $(e.target).attr('id').split('-')[1];
-
-                // Obtener el texto del botón (nombre del grupo)
-                var grupoNombre = $('button.accordion-button[data-bs-target="#collapse-' + grupoId + '"]').contents().filter(function () {
-                    return this.nodeType === 3; // Solo el texto sin elementos HTML
-                }).text().trim();
 
                 // Cambiar a "Editar Grupo" en lugar de "Crear Grupo"
                 $('#crearGrupoBtn').text('Editar Grupo').attr('data-bs-target', '#grupoModal');
                 $('#grupoModalLabel').text('Editar Grupo');
+                $('#grupoId').val(grupoId);
+
+                // Obtener solo el texto del nombre del grupo, sin el número de estudiantes
+                var grupoNombre = $('#heading-' + grupoId + ' .accordion-button')
+                    .contents()
+                    .filter(function () {
+                        return this.nodeType === 3; // Filtra solo el texto, ignora los elementos
+                    })
+                    .text()
+                    .trim();
 
                 // Cargar datos del grupo en el formulario
                 $('#nombreGrupo').val(grupoNombre);
-                $('#grupoId').val(grupoId);
 
                 // Mostrar botón de eliminar
                 $('#eliminarGrupoBtn').removeClass('d-none');
+
+                // Cargar los estudiantes seleccionados para el grupo
+                cargarEstudiantesSeleccionados(grupoId);
             });
 
-            // Manejar el cierre del acordeón para restablecer el botón
-            $('#gruposAccordion').on('hide.bs.collapse', function (e) {
+            // Manejar el cierre del acordeón para restablecer el botón y limpiar el formulario
+            $('#gruposAccordion').on('hide.bs.collapse', function () {
                 // Restablecer el botón a "Crear Grupo" al cerrar el acordeón
                 $('#crearGrupoBtn').text('Crear Grupo').attr('data-bs-target', '#grupoModal');
                 $('#grupoModalLabel').text('Crear Grupo');
                 $('#nombreGrupo').val('');
                 $('#grupoId').val('0');
                 $('#eliminarGrupoBtn').addClass('d-none');
-                $('#listaEstudiantes input[type="checkbox"]').prop('checked', false); // Deseleccionar todos los checkboxes
+
+                // Restablecer la lista de estudiantes
+                $('.estudiante-checkbox').prop('checked', false);
+                $('.checkmark').addClass('d-none');
+                $('li.list-group-item').show(); // Mostrar todos los estudiantes
             });
 
             // Restablecer modal al cerrarse
@@ -202,11 +216,16 @@
                 $('#nombreGrupo').val('');
                 $('#grupoId').val('0');
                 $('#eliminarGrupoBtn').addClass('d-none');
+
+                // Restablecer la lista de estudiantes
+                $('.estudiante-checkbox').prop('checked', false);
+                $('.checkmark').addClass('d-none');
+                $('li.list-group-item').show(); // Mostrar todos los estudiantes
             });
 
             // Eliminar grupo
-            $('#eliminarGrupoBtn').on('click', function () {
-                var grupoId = $('#grupoId').val();
+            $(document).on('click', '#eliminarGrupoBtn', function () {
+                var grupoId = $('#grupoId').val(); // Asegúrate de que esto obtenga el ID del grupo correcto
                 Swal.fire({
                     title: '¿Estás seguro de eliminar este grupo?',
                     icon: 'warning',
@@ -215,11 +234,139 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Aquí podrías agregar una llamada Ajax para eliminar el grupo del servidor
-                        location.reload(); // Refrescar la página después de eliminar
+                        $.post('@Url.Action("EliminarGrupo", "Cursos")', { grupoId: grupoId }, function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Eliminado',
+                                    text: 'El grupo ha sido eliminado con éxito.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    location.reload(); // Refrescar la página después de la eliminación
+                                });
+                            } else {
+                                Swal.fire('Error', response.message, 'error');
+                            }
+                        }).fail(function () {
+                            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                        });
                     }
                 });
             });
+
+            // Función para manejar la eliminación de personas
+            $(document).on('click', '.btn-eliminar-persona', function () {
+                var personaId = $(this).data('persona-id');
+                var cursoId = '@ViewBag.CourseId';
+                Swal.fire({
+                    title: '¿Estás seguro de eliminar a esta persona del curso?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("EliminarPersona", "Cursos")', { cursoId: cursoId, personaId: personaId }, function (response) {
+                            if (response.success) {
+                                // Mostrar una alerta de éxito
+                                Swal.fire({
+                                    title: 'Eliminado',
+                                    text: 'La persona ha sido eliminada del curso.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    // Recargar la página después de mostrar la alerta
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', 'Ocurrió un error al eliminar la persona.', 'error');
+                            }
+                        }).fail(function () {
+                            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                        });
+                    }
+                });
+            });
+
+            // Manejar la adición de estudiantes al curso
+            $('#agregarEstudianteModal').on('show.bs.modal', function () {
+                var cursoId = '@ViewBag.CourseId';
+                $.get('@Url.Action("ObtenerEstudiantesDisponibles", "Cursos")', { cursoId: cursoId }, function (data) {
+                    $('#estudiantesDisponibles').html(data);
+                });
+            });
+
+            $(document).on('click', '.btn-add-student', function () {
+                var personaId = $(this).data('persona-id');
+                var cursoId = '@ViewBag.CourseId';
+                $.post('@Url.Action("AgregarEstudiante", "Cursos")', { cursoId: cursoId, personaId: personaId }, function () {
+                    location.reload();
+                });
+            });
+
+            // Función para cargar estudiantes seleccionados en el modal
+            function cargarEstudiantesSeleccionados(grupoId) {
+                $.get('@Url.Action("ObtenerPersonasPorGrupo", "Cursos")', { grupoId: grupoId }, function (estudiantes) {
+                    console.log(estudiantes); // Verifica los datos recibidos en la consola
+
+                    // Limpiamos cualquier selección previa
+                    $('.estudiante-checkbox').prop('checked', false);
+                    $('.checkmark').addClass('d-none');
+
+                    // Recorrer los estudiantes y marcar los checkboxes correspondientes
+                    estudiantes.forEach(estudiante => {
+                        var checkbox = $('#estudiante-' + estudiante.id);
+                        if (checkbox.length) {
+                            checkbox.prop('checked', true);
+                            checkbox.siblings('.checkmark').removeClass('d-none');
+                        }
+                    });
+                }).fail(function () {
+                    console.log('Error al cargar los estudiantes del grupo');
+                });
+            }
+
+            // Manejar la selección de estudiantes
+            $(document).on('change', '.estudiante-checkbox', function () {
+                if ($(this).is(':checked')) {
+                    $(this).siblings('.checkmark').removeClass('d-none');
+                    estudiantesSeleccionados.push(parseInt($(this).val()));
+                    $(this).closest('li').hide(); // Ocultar de la lista tras selección
+                } else {
+                    $(this).siblings('.checkmark').addClass('d-none');
+                    var estudianteId = parseInt($(this).val());
+                    estudiantesSeleccionados = estudiantesSeleccionados.filter(function (id) {
+                        return id !== estudianteId;
+                    });
+                    $(this).closest('li').show(); // Mostrar en la lista tras deselección
+                }
+            });
+
+            $('#grupoForm').on('submit', function (event) {
+                event.preventDefault(); // Evita el envío del formulario por defecto
+
+                var grupoId = $('#grupoId').val();
+                var formData = $(this).serialize(); // Serializa los datos del formulario
+
+                $.post('@Url.Action("CrearGrupo", "Cursos")', formData, function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: grupoId > 0 ? 'Grupo actualizado' : 'Grupo creado',
+                            text: grupoId > 0 ? 'El grupo se ha actualizado con éxito.' : 'El grupo se ha creado con éxito.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            location.reload(); // Recargar la página para mostrar los cambios
+                        });
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                }).fail(function () {
+                    Swal.fire('Error', 'Ocurrió un error al intentar guardar el grupo.', 'error');
+                });
+            });
+
+
         });
     </script>
 }
