@@ -569,8 +569,16 @@ namespace ProyectoCanvas.Controllers
         // Personas
         public async Task<IActionResult> Personas(int id, int? grupoId = null)
         {
+            // Obtener todas las personas asociadas al curso
             var personas = await _repositorioPersonas.ObtenerPersonasPorCurso(id);
+
+            // Obtener todos los grupos del curso
             var grupos = await _repositorioGrupos.ObtenerGruposPorCurso(id);
+
+            // Obtener todos los estudiantes que ya están en grupos dentro del curso
+            var estudiantesEnGrupos = await _repositorioGrupos.ObtenerPersonasEnGruposPorCurso(id);
+
+            // Obtener los estudiantes disponibles (todos los estudiantes)
             var estudiantesDisponibles = await _repositorioPersonas.ObtenerEstudiantesDisponibles(id);
 
             Grupo grupoSeleccionado = null;
@@ -579,17 +587,20 @@ namespace ProyectoCanvas.Controllers
                 grupoSeleccionado = await _repositorioGrupos.ObtenerGrupoPorId(grupoId.Value);
             }
 
+            // Crear el ViewModel y asignar las propiedades
             var viewModel = new CursoPersonasViewModel
             {
                 Personas = personas,
                 Grupos = grupos,
                 GrupoSeleccionado = grupoSeleccionado,
-                EstudiantesDisponibles = estudiantesDisponibles
+                EstudiantesDisponibles = estudiantesDisponibles,
+                EstudiantesEnGrupos = estudiantesEnGrupos.ToList()
             };
 
             ViewBag.CourseId = id;
             return View(viewModel);
         }
+
 
         public async Task<IActionResult> ObtenerEstudiantesDisponibles(int cursoId)
         {
@@ -737,19 +748,5 @@ namespace ProyectoCanvas.Controllers
             var personas = await _repositorioGrupos.ObtenerPersonasPorGrupo(grupoId);
             return Json(personas);
         }
-
-        [HttpGet("ObtenerEstudiantesSuscritos")]
-        public async Task<IActionResult> ObtenerEstudiantesSuscritos(int cursoId)
-        {
-            var estudiantes = await _repositorioPersonas.ObtenerPersonasPorCurso(cursoId);
-            var estudiantesData = estudiantes.Select(e => new
-            {
-                e.Id,
-                NombreCompleto = $"{e.Nombre} {e.ApellidoPaterno} {e.ApellidoMaterno}"
-            });
-            return Json(estudiantesData);
-        }
-
-
     }
 }

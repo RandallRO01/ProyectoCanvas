@@ -16,6 +16,7 @@ namespace ProyectoCanvas.Services
         Task ActualizarGrupo(Grupo grupo);
         Task EliminarEstudiantesDeGrupo(int grupoId);
         Task EliminarGrupo(int grupoId);
+        Task<IEnumerable<Persona>> ObtenerPersonasEnGruposPorCurso(int cursoId);
     }
 
 
@@ -121,6 +122,20 @@ namespace ProyectoCanvas.Services
             var query = @"DELETE FROM Grupos WHERE Id = @GrupoId";
             await connection.ExecuteAsync(query, new { GrupoId = grupoId });
         }
+
+        public async Task<IEnumerable<Persona>> ObtenerPersonasEnGruposPorCurso(int cursoId)
+        {
+            using var connection = new SqlConnection(connectionString);
+            var query = @"
+                SELECT p.* FROM Persona p
+                INNER JOIN GrupoEstudiantes ge ON p.Id = ge.PersonaId
+                INNER JOIN Grupos g ON ge.GrupoId = g.Id
+                WHERE g.CursoId = @CursoId";
+
+            return await connection.QueryAsync<Persona>(query, new { CursoId = cursoId });
+        }
+
+
 
     }
 

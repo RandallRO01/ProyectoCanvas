@@ -15,5 +15,7 @@ namespace ProyectoCanvas.Models
         //public Role Rol { get; set; }
         public string Rol { get; set; }
         public ICollection<PersonaCurso> PersonaCursos { get; set; }
+
+        public int GrupoId { get; set; }
     }
 }

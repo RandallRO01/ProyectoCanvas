@@ -137,14 +137,26 @@
                             <ul id="listaEstudiantes" class="list-group">
                                 @foreach (var estudiante in Model.EstudiantesDisponibles)
                                 {
+                                    // Verifica si el estudiante está en otro grupo diferente al grupo actual
+                                    var estaEnOtroGrupo = Model.EstudiantesEnGrupos.Any(eg => eg.Id == estudiante.Id && eg.GrupoId != Model.GrupoSeleccionado?.Id);
+                                    var estaEnGrupoActual = Model.EstudiantesEnGrupos.Any(eg => eg.Id == estudiante.Id && eg.GrupoId == Model.GrupoSeleccionado?.Id);
+
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <span>@estudiante.Nombre</span>
-                                        <input type="checkbox" class="form-check-input estudiante-checkbox" id="estudiante-@estudiante.Id" name="estudiantesSeleccionados" value="@estudiante.Id">
-                                        <span class="checkmark text-success d-none">&#10003;</span>
+                                        @if (estaEnOtroGrupo && !estaEnGrupoActual)
+                                        {
+                                            <span class="lock-icon text-secondary">&#128274;</span> <!-- Icono de candado -->
+                                        }
+                                        else
+                                        {
+                                            <input type="checkbox" class="form-check-input estudiante-checkbox" id="estudiante-@estudiante.Id" name="estudiantesSeleccionados" value="@estudiante.Id" @(estaEnGrupoActual ? "checked" : "")>
+                                            <span class="checkmark text-success d-none">&#10003;</span>
+                                        }
                                     </li>
                                 }
                             </ul>
                         </div>
+
                         <input type="hidden" id="cursoId" name="cursoId" value="@ViewBag.CourseId" />
                         <input type="hidden" id="grupoId" name="grupoId" value="0">
                         <button type="submit" class="btn btn-primary">Guardar</button>
@@ -164,6 +176,8 @@
         $(document).ready(function () {
             // Inicialización de arrays para almacenar los estudiantes seleccionados
             var estudiantesSeleccionados = [];
+
+            $('.lock-icon').closest('li').css('pointer-events', 'none');
 
             // Lógica para editar grupo al desplegar el acordeón
             $('#gruposAccordion').on('show.bs.collapse', function (e) {
