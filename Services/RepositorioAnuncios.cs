@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using ProyectoCanvas.Models;
+using ProyectoCanvas.ViewModels;
 
 namespace ProyectoCanvas.Services
 {
@@ -10,6 +11,7 @@ namespace ProyectoCanvas.Services
         Task<IEnumerable<Anuncio>> ObtenerAnuncios();
         Task CrearAnuncio(Anuncio anuncio);
         Task<IEnumerable<Anuncio>> ObtenerAnunciosPorCurso(int idCurso);
+        Task<IEnumerable<AnuncioViewModel>> ObtenerTodosLosAnuncios();
     }
 
     public class RepositorioAnuncios : IRepositorioAnuncios
@@ -76,6 +78,20 @@ namespace ProyectoCanvas.Services
 
             return anuncios;
         }
+
+        public async Task<IEnumerable<AnuncioViewModel>> ObtenerTodosLosAnuncios()
+        {
+            using var connection = new SqlConnection(connectionString);
+            var query = @"
+            SELECT a.Id, a.Titulo, a.Descripcion, a.FechaPublicacion, p.Nombre + ' ' + p.Apellido_Paterno + ' ' + p.Apellido_Materno AS NombreProfesor
+            FROM Anuncios a
+            INNER JOIN Persona p ON a.Id = p.Id
+            ORDER BY a.FechaPublicacion DESC";
+
+            return await connection.QueryAsync<AnuncioViewModel>(query);
+        }
+
+
 
 
     }

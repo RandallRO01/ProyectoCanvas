@@ -14,14 +14,16 @@ namespace ProyectoCanvas.Controllers
         private readonly IRepositorioRoles _repositorioRoles;
         private readonly IRepositorioCursos _repositorioCursos;
         private readonly IRepositorioAsignaciones _repositorioAsignaciones;
+        private readonly IRepositorioAnuncios _repositorioAnuncios;
 
         public HomeController(ILogger<HomeController> logger, IRepositorioRoles repositorioRoles,
-            IRepositorioCursos repositorioCursos, IRepositorioAsignaciones repositorioAsignaciones)
+            IRepositorioCursos repositorioCursos, IRepositorioAsignaciones repositorioAsignaciones, IRepositorioAnuncios repositorioAnuncios)
         {
             _logger = logger;
             _repositorioRoles = repositorioRoles;
             _repositorioCursos = repositorioCursos;
             _repositorioAsignaciones = repositorioAsignaciones;
+            _repositorioAnuncios = repositorioAnuncios;
         }
 
         [Authorize]
@@ -102,6 +104,25 @@ namespace ProyectoCanvas.Controllers
             await _repositorioCursos.Eliminar(id);
             return RedirectToAction("Index");
         }
+
+        //Anuncios
+        public async Task<IActionResult> Anuncios()
+        {
+            var anuncios = await _repositorioAnuncios.ObtenerTodosLosAnuncios();
+            var viewModel = anuncios.Select(anuncio => new AnuncioViewModel
+            {
+                Id = anuncio.Id,
+                Titulo = anuncio.Titulo,
+                Descripcion = anuncio.Descripcion,
+                FechaPublicacion = anuncio.FechaPublicacion,
+                NombreProfesor = $"{anuncio.NombreProfesor}"
+            }).ToList();
+
+            return View(viewModel);
+        }
+
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
