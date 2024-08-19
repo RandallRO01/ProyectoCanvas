@@ -116,7 +116,6 @@
                 cargarAsistencia(fechaSeleccionada);
             });
 
-            // Función para cargar asistencia
             function cargarAsistencia(fecha) {
                 $.get('@Url.Action("ObtenerAsistenciaPorFecha", "Cursos")', { cursoId: @ViewBag.CourseId, fecha: fecha }, function (response) {
                     if (response.success) {
@@ -141,26 +140,7 @@
                 });
             }
 
-            // Guardar asistencia
             $('#btnGuardarAsistencia').on('click', function () {
-                var faltanOpciones = false;
-
-                Verificar si cada estudiante tiene una opción seleccionada
-                $('#tablaAsistencia tr').each(function () {
-                    if ($(this).find('input[type="radio"]:checked').length === 0) {
-                        faltanOpciones = true;
-                    }
-                });
-
-                if (faltanOpciones) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Faltan opciones',
-                        text: 'Debe seleccionar una opción para todos los estudiantes antes de guardar la asistencia.'
-                    });
-                    return;
-                }
-
                 var cursoId = @ViewBag.CourseId;
                 var fecha = $('#fechaAsistencia').val();
                 var asistencias = [];
